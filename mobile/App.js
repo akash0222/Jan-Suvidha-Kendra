@@ -92,7 +92,7 @@ export default function App() {
   useEffect(() => {
     let alive = true;
     AsyncStorage.getItem("jsk_queries").then((value) => {
-      if (alive && value) { try { setHistory(JSON.parse(value)); } catch { setHistory([]); } }
+      if (alive && value) { try { const parsed = JSON.parse(value); setHistory(Array.isArray(parsed) ? parsed.filter(item => item && typeof item.id === "string") : []); } catch { setHistory([]); } }
     }).catch(() => {});
     return () => { alive = false; };
   },[]);
@@ -111,7 +111,7 @@ export default function App() {
     const digits = phone.replace(/[^0-9]/g,"");
     const nextErrors = {};
     if (name.trim().length < 2) nextErrors.name = "Enter your full name (at least 2 characters).";
-    if (digits.length < 10 || digits.length > 13) nextErrors.phone = "Enter a valid number with 10 to 13 digits.";
+    if (digits.length < 10 || digits.length > 13 || !/^[+0-9\\s()\\-]+$/.test(phone.trim())) nextErrors.phone = "Enter a valid number with 10 to 13 digits.";
     if (email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) nextErrors.email = "Enter a valid email address.";
     if (!serviceId) nextErrors.serviceId = "Choose the service you need help with.";
     if (message.trim().length < 10) nextErrors.message = "Please enter at least 10 characters.";
@@ -139,7 +139,8 @@ export default function App() {
         return;
       }
       entry.id = "JSK-" + ref.id.slice(-8).toUpperCase();
-      const updated = [entry,...history];
+      const previousHistory = Array.isArray(history) ? history.filter(item => item && item.id !== entry.id) : [];
+      const updated = [entry,...previousHistory].slice(0,100);
       setHistory(updated); setSuccess(entry.id); setSuccessRecord({...entry}); setName(""); setPhone(""); setEmail(""); setMessage("");
       setServiceId(""); setPickerOpen(false); setErrors({}); setTab("success");
       try { await AsyncStorage.setItem("jsk_queries",JSON.stringify(updated)); }
@@ -297,9 +298,9 @@ export default function App() {
       <View style={S.privacyStrip}><View style={S.privacyIcon}><Ionicons name="shield-checkmark-outline" size={18} color={C.forest}/></View><Text style={S.privacyText}>No account required. Your query is sent to our service database.</Text></View>
       <View style={S.formCard}>
         <Text style={S.formTitle}>Your details</Text>
-        <Field label="Full name" required error={errors.name}><TextInput value={name} onChangeText={change(setName,"name")} style={S.input} placeholder={translateText("Enter your full name",language)} placeholderTextColor="#9AA69F" autoCapitalize="words"/></Field>
-        <Field label="Mobile number" required hint="10–13 digits" error={errors.phone}><TextInput value={phone} onChangeText={change(setPhone,"phone")} style={S.input} placeholder={translateText("Enter your contact number",language)} placeholderTextColor="#9AA69F" keyboardType="phone-pad" maxLength={16}/></Field>
-        <Field label="Email address" hint="Optional" error={errors.email}><TextInput value={email} onChangeText={change(setEmail,"email")} style={S.input} placeholder="name@example.com" placeholderTextColor="#9AA69F" keyboardType="email-address" autoCapitalize="none" autoCorrect={false}/></Field>
+        <Field label="Full name" required error={errors.name}><TextInput value={name} onChangeText={change(setName,"name")} style={S.input} placeholder={translateText("Enter your full name",language)} placeholderTextColor="#9AA69F" autoCapitalize="words" maxLength={80}/></Field>
+        <Field label="Mobile number" required hint="10–13 digits" error={errors.phone}><TextInput value={phone} onChangeText={change(setPhone,"phone")} style={S.input} placeholder={translateText("Enter your contact number",language)} placeholderTextColor="#9AA69F" keyboardType="phone-pad" maxLength={18}/></Field>
+        <Field label="Email address" hint="Optional" error={errors.email}><TextInput value={email} onChangeText={change(setEmail,"email")} style={S.input} placeholder="name@example.com" placeholderTextColor="#9AA69F" keyboardType="email-address" autoCapitalize="none" autoCorrect={false} maxLength={120}/></Field>
       </View>
       <View style={S.formCard}>
         <Text style={S.formTitle}>How can we help?</Text>
@@ -418,8 +419,8 @@ export default function App() {
 }
 
 const S = StyleSheet.create({
-  safe:{flex:1,backgroundColor:C.bg,paddingTop:Platform.OS === "android" ? (StatusBar.currentHeight || 0) : 0},
-  flex:{flex:1}, content:{flex:1},
+
+  safe:{flex:1,backgroundColor:C.bg,paddingTop:Platform.OS === "android" ? (StatusBar.currentHeight || 0) : 0}, content:{flex:1},
   header:{minHeight:68,paddingHorizontal:20,flexDirection:"row",alignItems:"center",backgroundColor:C.white,borderBottomWidth:1,borderBottomColor:C.line},
   brandMark:{width:42,height:42,borderRadius:14,backgroundColor:C.forest,alignItems:"center",justifyContent:"center"},
   brandMarkText:{color:C.white,fontWeight:"900",fontSize:12,letterSpacing:0.5},
@@ -475,18 +476,9 @@ const S = StyleSheet.create({
   detailGlowLarge:{position:"absolute",width:180,height:180,borderRadius:90,backgroundColor:"#245743",right:-70,top:-80,opacity:0.9},
   detailGlowSmall:{position:"absolute",width:100,height:100,borderRadius:50,borderWidth:1,borderColor:"#5A876D",right:-25,bottom:-45},
   detailHeroTop:{flexDirection:"row",alignItems:"center",justifyContent:"space-between"},
-  detailIcon:{width:54,height:54,borderRadius:17,backgroundColor:"#DDEBE0",alignItems:"center",justifyContent:"center",marginBottom:16},
   detailEyebrow:{color:"#BFD6C6",fontSize:8,letterSpacing:1.2,fontWeight:"900",marginTop:1},
-  detailTag:{alignSelf:"flex-start",backgroundColor:"#285641",borderRadius:20,paddingHorizontal:10,paddingVertical:6},
-  detailTagText:{color:"#D8E8DC",fontSize:9,fontWeight:"800"},
-  detailTitle:{color:C.white,fontSize:25,lineHeight:31,fontWeight:"900",marginTop:8,letterSpacing:-0.5},
-  detailDesc:{color:"#D2E2D7",fontSize:11,lineHeight:18,marginTop:8},
   detailAssurance:{flexDirection:"row",alignItems:"flex-start",gap:7,borderTopWidth:1,borderTopColor:"#3C6B53",paddingTop:12,marginTop:15},
   detailAssuranceText:{color:"#C7DDCD",fontSize:9,lineHeight:14,flex:1},
-  infoCard:{backgroundColor:C.white,borderWidth:1,borderColor:C.line,borderRadius:18,padding:17,marginBottom:12},
-  cardHeading:{flexDirection:"row",alignItems:"center",marginBottom:14},
-  cardHeadingIcon:{width:37,height:37,backgroundColor:C.mint,borderRadius:12,alignItems:"center",justifyContent:"center",marginRight:10},
-  cardHeadingTitle:{color:C.ink,fontSize:13,fontWeight:"900"},cardHeadingSub:{color:C.muted,fontSize:9,marginTop:3},
   checklistSummary:{flexDirection:"row",alignItems:"center",justifyContent:"space-between",marginBottom:8},
   checklistProgressLabel:{color:"#96A29A",fontSize:8,letterSpacing:0.9,fontWeight:"900"},
   checklistProgressValue:{color:C.forest,fontSize:13,fontWeight:"900",marginTop:3},
@@ -497,25 +489,34 @@ const S = StyleSheet.create({
   documentCheckRowDone:{backgroundColor:"#F7FBF7"},
   documentNumber:{width:27,height:27,borderRadius:9,backgroundColor:C.soft,alignItems:"center",justifyContent:"center"},
   documentNumberDone:{backgroundColor:C.green},
-  documentNumberText:{color:C.green,fontSize:9,fontWeight:"900"},
-  documentText:{color:C.ink,fontSize:11,flex:1},documentTextDone:{color:C.green,fontWeight:"700"},
-  lastRow:{paddingBottom:5},
+  documentNumberText:{color:C.green,fontSize:9,fontWeight:"900"},documentTextDone:{color:C.green,fontWeight:"700"},
   checklistDisclaimer:{flexDirection:"row",alignItems:"flex-start",gap:7,backgroundColor:C.amberBg,borderRadius:11,padding:10,marginTop:12},
   checklistDisclaimerText:{color:"#80612E",fontSize:9,lineHeight:14,flex:1},
+  guidanceIcon:{width:34,height:34,borderRadius:11,backgroundColor:C.white,alignItems:"center",justifyContent:"center"},guidanceSubtitle:{color:C.muted,fontSize:9,marginTop:3},
+  guidanceStep:{flexDirection:"row",alignItems:"flex-start",gap:10,marginTop:9},
+  guidanceStepNumber:{width:22,height:22,borderRadius:8,backgroundColor:"#DDEBE0",alignItems:"center",justifyContent:"center"},
+  guidanceStepNumberText:{color:C.forest,fontSize:9,fontWeight:"900"},
+  guidanceDisclaimer:{color:"#929D96",fontSize:8,lineHeight:13,marginTop:14,borderTopWidth:1,borderTopColor:"#E2EAE3",paddingTop:10},
+  detailFootnote:{color:"#929D96",fontSize:9,lineHeight:14,textAlign:"center",marginTop:12,paddingHorizontal:8},
+
+  detailIcon:{width:52,height:52,borderRadius:16,backgroundColor:"#DDEBE0",alignItems:"center",justifyContent:"center",marginBottom:16},
+  detailTag:{alignSelf:"flex-start",backgroundColor:"#285641",borderRadius:20,paddingHorizontal:10,paddingVertical:6},
+  detailTagText:{color:"#D8E8DC",fontSize:9,fontWeight:"800"},
+  detailTitle:{color:C.white,fontSize:25,lineHeight:31,fontWeight:"900",marginTop:13,letterSpacing:-0.5},
+  detailDesc:{color:"#D2E2D7",fontSize:11,lineHeight:18,marginTop:8},
+  infoCard:{backgroundColor:C.white,borderWidth:1,borderColor:C.line,borderRadius:18,padding:17,marginBottom:12},
+  cardHeading:{flexDirection:"row",alignItems:"center",marginBottom:10},
+  cardHeadingIcon:{width:37,height:37,backgroundColor:C.mint,borderRadius:12,alignItems:"center",justifyContent:"center",marginRight:10},
+  cardHeadingTitle:{color:C.ink,fontSize:13,fontWeight:"900"},cardHeadingSub:{color:C.muted,fontSize:9,marginTop:3},
+  flex:{flex:1},
+  documentRow:{flexDirection:"row",gap:9,alignItems:"center",paddingVertical:11,borderTopWidth:1,borderTopColor:"#F0F3F0"},
+  lastRow:{paddingBottom:2},documentText:{color:C.ink,fontSize:11,flex:1},
   processingCard:{flexDirection:"row",gap:11,backgroundColor:C.amberBg,borderRadius:16,padding:14,marginBottom:12},
   processingIcon:{width:36,height:36,borderRadius:12,backgroundColor:"#FFE9BF",alignItems:"center",justifyContent:"center"},
   processingTitle:{color:"#7A5214",fontSize:11,fontWeight:"900",marginTop:2},processingText:{color:"#896B3C",fontSize:10,lineHeight:16,marginTop:4},
   guidanceCard:{backgroundColor:C.soft,borderRadius:16,padding:16,marginBottom:5},
-  guidanceHeading:{flexDirection:"row",alignItems:"center",gap:9,marginBottom:12},
-  guidanceIcon:{width:34,height:34,borderRadius:11,backgroundColor:C.white,alignItems:"center",justifyContent:"center"},
-  guidanceTitle:{color:C.forest,fontSize:12,fontWeight:"900"},guidanceSubtitle:{color:C.muted,fontSize:9,marginTop:3},
-  guidanceStep:{flexDirection:"row",alignItems:"flex-start",gap:10,marginTop:9},
-  guidanceStepNumber:{width:22,height:22,borderRadius:8,backgroundColor:"#DDEBE0",alignItems:"center",justifyContent:"center"},
-  guidanceStepNumberText:{color:C.forest,fontSize:9,fontWeight:"900"},
-  guidanceText:{color:"#64736A",fontSize:10,lineHeight:16,flex:1,paddingTop:2},
-  guidanceDisclaimer:{color:"#929D96",fontSize:8,lineHeight:13,marginTop:14,borderTopWidth:1,borderTopColor:"#E2EAE3",paddingTop:10},
-  detailFootnote:{color:"#929D96",fontSize:9,lineHeight:14,textAlign:"center",marginTop:12,paddingHorizontal:8},
-  documentRow:{flexDirection:"row",gap:9,alignItems:"center",paddingVertical:11,borderTopWidth:1,borderTopColor:"#F0F3F0"},
+  guidanceHeading:{flexDirection:"row",alignItems:"center",gap:8,marginBottom:9},guidanceTitle:{color:C.forest,fontSize:12,fontWeight:"900"},
+  guidanceText:{color:"#64736A",fontSize:10,lineHeight:17,marginTop:4},
   button:{minHeight:52,backgroundColor:C.forest,borderRadius:14,paddingHorizontal:17,flexDirection:"row",alignItems:"center",justifyContent:"center",gap:10,marginTop:14},
   buttonLight:{backgroundColor:C.mint},disabled:{opacity:0.55},buttonText:{color:C.white,fontSize:11,fontWeight:"900"},buttonTextLight:{color:C.forest},
   intro:{marginBottom:17},pageTitle:{color:C.ink,fontSize:26,lineHeight:32,fontWeight:"900",letterSpacing:-0.6},
@@ -541,7 +542,6 @@ const S = StyleSheet.create({
   errorText:{color:C.red,fontSize:10,lineHeight:15,flex:1},formNote:{color:"#929D96",fontSize:9,lineHeight:14,textAlign:"center",marginTop:12},
   successCard:{backgroundColor:C.forest,borderRadius:20,padding:19,marginBottom:14},
   successIcon:{width:42,height:42,borderRadius:14,backgroundColor:"#3F7C59",alignItems:"center",justifyContent:"center",marginBottom:14},
-  successCardEyebrow:{color:"#BBD8C4",fontSize:9,letterSpacing:1.2,fontWeight:"900"},
   successTitle:{color:C.white,fontSize:19,fontWeight:"900",marginTop:7},
   successDesc:{color:"#D3E4D9",fontSize:10,lineHeight:16,marginTop:6},
   referenceBox:{backgroundColor:"#234F3B",borderRadius:13,padding:13,marginTop:16},
@@ -596,4 +596,6 @@ const S = StyleSheet.create({
   nextStepText:{color:"#64736A",fontSize:10,lineHeight:16,flex:1,paddingTop:2},
   successDisclaimer:{color:"#929D96",fontSize:8,lineHeight:13,marginTop:13,borderTopWidth:1,borderTopColor:"#E2EAE3",paddingTop:10}
 
+,
+  successCardEyebrow:{color:"#BBD8C4",fontSize:9,letterSpacing:1.2,fontWeight:"900"}
 });
