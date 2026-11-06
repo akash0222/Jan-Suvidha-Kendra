@@ -29,7 +29,7 @@ export default function App(){
  const startQuery=(s)=>{setServiceId(s.id);setSelected(null);setSuccess("");setTab("raise");};
  const submit=async()=>{
   const cleanPhone=phone.replace(/[^0-9]/g,"");
-  const emailValid=!email.trim()||/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email.trim());
+  const emailValid=!email.trim()||/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
   if(name.trim().length<2){Alert.alert("Name required","Please enter your full name (at least 2 characters).");return;}
   if(cleanPhone.length<10||cleanPhone.length>13){Alert.alert("Check contact number","Enter a valid phone number with 10 to 13 digits, including country code if applicable.");return;}
   if(!emailValid){Alert.alert("Check email address","Enter a valid email address or leave this field empty.");return;}
