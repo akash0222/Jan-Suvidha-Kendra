@@ -149,6 +149,7 @@ export default function App() {
     }
   };
 
+  // These render helpers are called directly below so typing and checklist updates do not remount their trees.
   const Header = () => <View style={S.header}>
     <View style={S.brandMark}><Text style={S.brandMarkText}>JSK</Text></View>
     <View style={S.brandCopy}><Text style={S.brandName}>Jan Suvidha Kendra</Text><Text style={S.brandCaption}>Citizen service portal</Text></View>
@@ -196,7 +197,7 @@ export default function App() {
       </TouchableOpacity>)}
     </ScrollView>
 
-    {filtered.length ? <View style={S.grid}>{filtered.map((item) => <ServiceCard key={item.id} item={item}/>)}</View> :
+    {filtered.length ? <View style={S.grid}>{filtered.map((item) => <React.Fragment key={item.id}>{ServiceCard({item})}</React.Fragment>)}</View> :
       <View style={S.empty}><Ionicons name="search-outline" size={28} color="#A3B0A8"/><Text style={S.emptyTitle}>No services found</Text><Text style={S.emptyText}>Try a different search or category.</Text><TouchableOpacity onPress={() => {setSearch("");setCategory("All");}}><Text style={S.link}>Clear filters</Text></TouchableOpacity></View>}
 
     <View style={S.helpBanner}>
@@ -392,7 +393,7 @@ export default function App() {
 
   const Queries = () => <ScrollView contentContainerStyle={S.page} showsVerticalScrollIndicator={false}>
     <View style={S.intro}><Text style={S.eyebrow}>YOUR ACTIVITY</Text><Text style={S.pageTitle}>My queries</Text><Text style={S.pageSubtitle}>Reference details for queries saved on this device.</Text></View>
-    {success ? <View style={S.successCard}><View style={S.successIcon}><Ionicons name="checkmark" size={24} color={C.white}/></View><Text style={S.successEyebrow}>QUERY SUBMITTED</Text><Text style={S.successTitle}>We've received your query.</Text><Text style={S.successDesc}>Keep this reference number for future communication.</Text><View style={S.referenceBox}><Text style={S.referenceLabel}>YOUR REFERENCE NUMBER</Text><Text selectable style={S.referenceValue}>{success}</Text></View></View> : null}
+    {success ? <View style={S.successCard}><View style={S.successIcon}><Ionicons name="checkmark" size={24} color={C.white}/></View><Text style={S.successCardEyebrow}>QUERY SUBMITTED</Text><Text style={S.successTitle}>We've received your query.</Text><Text style={S.successDesc}>Keep this reference number for future communication.</Text><View style={S.referenceBox}><Text style={S.referenceLabel}>YOUR REFERENCE NUMBER</Text><Text selectable style={S.referenceValue}>{success}</Text></View></View> : null}
     {history.length ? history.map((item) => <View key={item.id} style={S.queryCard}>
       <View style={S.queryTop}><View><Text style={S.metaLabel}>REFERENCE NUMBER</Text><Text selectable style={S.reference}>{item.id}</Text></View><View style={S.status}><View style={S.statusDot}/><Text style={S.statusText}>{item.status || "Received"}</Text></View></View>
       <Text style={S.queryService}>{item.serviceTitle}</Text><Text numberOfLines={3} style={S.queryMessage}>{item.message}</Text>
@@ -404,8 +405,8 @@ export default function App() {
 
   return <LanguageContext.Provider value={language}><SafeAreaView style={S.safe}>
     <StatusBar barStyle="dark-content" backgroundColor={C.bg}/>
-    <Header/>
-    <View style={S.content}>{staffPortalOpen ? <StaffPortal onExit={() => setStaffPortalOpen(false)}/> : selected ? <Details/> : tab === "services" ? <Home/> : tab === "raise" ? <QueryForm/> : tab === "success" && successRecord ? <Success/> : <Queries/>}</View>
+    {Header()}
+    <View style={S.content}>{staffPortalOpen ? <StaffPortal onExit={() => setStaffPortalOpen(false)}/> : selected ? Details() : tab === "services" ? Home() : tab === "raise" ? QueryForm() : tab === "success" && successRecord ? Success() : Queries()}</View>
     {tab !== "success" && !staffPortalOpen ? (
     <View style={S.bottomNav}>
       <TouchableOpacity onPress={() => goTab("services")} style={S.navItem}><View style={[S.navIcon,(tab === "services" || selected) && S.navIconActive]}><Ionicons name="grid-outline" size={20} color={(tab === "services" || selected) ? C.forest : "#87938B"}/></View><Text style={[S.navLabel,(tab === "services" || selected) && S.navLabelActive]}>Services</Text></TouchableOpacity>
@@ -514,25 +515,7 @@ const S = StyleSheet.create({
   guidanceText:{color:"#64736A",fontSize:10,lineHeight:16,flex:1,paddingTop:2},
   guidanceDisclaimer:{color:"#929D96",fontSize:8,lineHeight:13,marginTop:14,borderTopWidth:1,borderTopColor:"#E2EAE3",paddingTop:10},
   detailFootnote:{color:"#929D96",fontSize:9,lineHeight:14,textAlign:"center",marginTop:12,paddingHorizontal:8},
-
-  detailIcon:{width:52,height:52,borderRadius:16,backgroundColor:"#DDEBE0",alignItems:"center",justifyContent:"center",marginBottom:16},
-  detailTag:{alignSelf:"flex-start",backgroundColor:"#285641",borderRadius:20,paddingHorizontal:10,paddingVertical:6},
-  detailTagText:{color:"#D8E8DC",fontSize:9,fontWeight:"800"},
-  detailTitle:{color:C.white,fontSize:25,lineHeight:31,fontWeight:"900",marginTop:13,letterSpacing:-0.5},
-  detailDesc:{color:"#D2E2D7",fontSize:11,lineHeight:18,marginTop:8},
-  infoCard:{backgroundColor:C.white,borderWidth:1,borderColor:C.line,borderRadius:18,padding:17,marginBottom:12},
-  cardHeading:{flexDirection:"row",alignItems:"center",marginBottom:10},
-  cardHeadingIcon:{width:37,height:37,backgroundColor:C.mint,borderRadius:12,alignItems:"center",justifyContent:"center",marginRight:10},
-  cardHeadingTitle:{color:C.ink,fontSize:13,fontWeight:"900"},cardHeadingSub:{color:C.muted,fontSize:9,marginTop:3},
-  flex:{flex:1},
   documentRow:{flexDirection:"row",gap:9,alignItems:"center",paddingVertical:11,borderTopWidth:1,borderTopColor:"#F0F3F0"},
-  lastRow:{paddingBottom:2},documentText:{color:C.ink,fontSize:11,flex:1},
-  processingCard:{flexDirection:"row",gap:11,backgroundColor:C.amberBg,borderRadius:16,padding:14,marginBottom:12},
-  processingIcon:{width:36,height:36,borderRadius:12,backgroundColor:"#FFE9BF",alignItems:"center",justifyContent:"center"},
-  processingTitle:{color:"#7A5214",fontSize:11,fontWeight:"900",marginTop:2},processingText:{color:"#896B3C",fontSize:10,lineHeight:16,marginTop:4},
-  guidanceCard:{backgroundColor:C.soft,borderRadius:16,padding:16,marginBottom:5},
-  guidanceHeading:{flexDirection:"row",alignItems:"center",gap:8,marginBottom:9},guidanceTitle:{color:C.forest,fontSize:12,fontWeight:"900"},
-  guidanceText:{color:"#64736A",fontSize:10,lineHeight:17,marginTop:4},
   button:{minHeight:52,backgroundColor:C.forest,borderRadius:14,paddingHorizontal:17,flexDirection:"row",alignItems:"center",justifyContent:"center",gap:10,marginTop:14},
   buttonLight:{backgroundColor:C.mint},disabled:{opacity:0.55},buttonText:{color:C.white,fontSize:11,fontWeight:"900"},buttonTextLight:{color:C.forest},
   intro:{marginBottom:17},pageTitle:{color:C.ink,fontSize:26,lineHeight:32,fontWeight:"900",letterSpacing:-0.6},
@@ -558,7 +541,7 @@ const S = StyleSheet.create({
   errorText:{color:C.red,fontSize:10,lineHeight:15,flex:1},formNote:{color:"#929D96",fontSize:9,lineHeight:14,textAlign:"center",marginTop:12},
   successCard:{backgroundColor:C.forest,borderRadius:20,padding:19,marginBottom:14},
   successIcon:{width:42,height:42,borderRadius:14,backgroundColor:"#3F7C59",alignItems:"center",justifyContent:"center",marginBottom:14},
-  successEyebrow:{color:"#BBD8C4",fontSize:9,letterSpacing:1.2,fontWeight:"900"},
+  successCardEyebrow:{color:"#BBD8C4",fontSize:9,letterSpacing:1.2,fontWeight:"900"},
   successTitle:{color:C.white,fontSize:19,fontWeight:"900",marginTop:7},
   successDesc:{color:"#D3E4D9",fontSize:10,lineHeight:16,marginTop:6},
   referenceBox:{backgroundColor:"#234F3B",borderRadius:13,padding:13,marginTop:16},
