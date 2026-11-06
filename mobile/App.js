@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator, KeyboardAvoidingView, Platform, SafeAreaView,
-  ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View
+  ScrollView, StatusBar, StyleSheet, Text as RNText, TextInput, TouchableOpacity, View
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
@@ -19,6 +19,17 @@ const SERVICES = [
   { id:"bill", title:"Utility Bill Payment Assistance", category:"Utility Services", icon:"flash-outline", description:"Assistance with electricity or supported utility bill payment queries.", documents:["Consumer/account number","Latest bill"], time:"Subject to service availability" },
   { id:"pan", title:"PAN Card Assistance", category:"Identity Services", icon:"id-card-outline", description:"Guidance for PAN application, correction and required documents.", documents:["Aadhaar card","Date of birth proof","Photograph and signature"], time:"As per issuing authority" }
 ];
+
+const HI = {"Citizen service portal":"नागरिक सेवा पोर्टल","YOUR LOCAL SERVICE DESK":"आपकी स्थानीय सेवा सहायता","Simple help.":"आसान सहायता।","Clear guidance.":"स्पष्ट मार्गदर्शन।","Find a citizen service, understand what you may need, and send us your query.":"नागरिक सेवा खोजें, आवश्यक जानकारी समझें और अपना प्रश्न भेजें।","SERVICES":"सेवाएँ","NO":"नहीं","SIGN-IN NEEDED":"लॉगिन आवश्यक नहीं","GET STARTED":"शुरू करें","Find a service":"सेवा खोजें"," found":" मिलीं","Search certificates, schemes...":"प्रमाणपत्र या योजनाएँ खोजें...","All":"सभी","Certificates":"प्रमाणपत्र","Government Schemes":"सरकारी योजनाएँ","Education":"शिक्षा","Utility Services":"उपयोगिता सेवाएँ","Identity Services":"पहचान सेवाएँ","No services found":"कोई सेवा नहीं मिली","Try a different search or category.":"दूसरी खोज या श्रेणी चुनकर देखें।","Clear filters":"फ़िल्टर हटाएँ","Need a little help?":"क्या आपको सहायता चाहिए?","Tell us what you need and send a query.":"अपनी आवश्यकता बताएँ और प्रश्न भेजें।","Service information is indicative. Final requirements and approvals are decided by the relevant authority.":"सेवा संबंधी जानकारी केवल संकेतात्मक है। अंतिम आवश्यकताएँ और स्वीकृति संबंधित विभाग तय करता है।","All services":"सभी सेवाएँ","SERVICE INFORMATION":"सेवा की जानकारी","Guidance to help you prepare before contacting the relevant authority.":"संबंधित विभाग से संपर्क करने से पहले तैयारी हेतु मार्गदर्शन।","Document preparation":"दस्तावेज़ों की तैयारी","A helpful list to organise before you apply":"आवेदन से पहले दस्तावेज़ व्यवस्थित करने की सूची","YOUR PREPARATION":"आपकी तैयारी"," ready":" तैयार","This is an indicative preparation list, not an official or exhaustive document requirement. Confirm the latest checklist with the responsible authority.":"यह केवल संकेतात्मक सूची है, आधिकारिक या संपूर्ण दस्तावेज़ सूची नहीं। नवीनतम जानकारी संबंधित विभाग से जाँचें।","Processing information":"प्रक्रिया संबंधी जानकारी","As per department processing":"विभागीय प्रक्रिया के अनुसार","Depends on record verification":"रिकॉर्ड सत्यापन पर निर्भर","As per scheme rules":"योजना के नियमों के अनुसार","As per scholarship schedule":"छात्रवृत्ति कार्यक्रम के अनुसार","Subject to service availability":"सेवा उपलब्धता के अधीन","Before you visit":"आने से पहले","A few general preparation tips":"कुछ सामान्य तैयारी सुझाव","Keep original documents and clear copies ready.":"मूल दस्तावेज़ और उनकी स्पष्ट प्रतियाँ तैयार रखें।","Check that names, dates and other details are consistent across documents.":"सभी दस्तावेज़ों में नाम, तारीख़ और अन्य विवरण समान रखें।","Ask the responsible authority whether any additional documents, fees or appointments apply.":"संबंधित विभाग से अतिरिक्त दस्तावेज़, शुल्क या अपॉइंटमेंट की पुष्टि करें।","Eligibility, fees, acceptance and approval are determined only by the relevant department.":"पात्रता, शुल्क और स्वीकृति का निर्णय संबंधित विभाग ही करता है।","Ask about this service":"इस सेवा के बारे में पूछें","Need help with this service? Submit a query and keep the reference number for future communication.":"इस सेवा में सहायता चाहिए? प्रश्न भेजें और भविष्य के संपर्क के लिए संदर्भ संख्या सुरक्षित रखें।","WE'RE HERE TO HELP":"हम सहायता के लिए यहाँ हैं","Raise a query":"प्रश्न भेजें","Share a few details and tell us what support you need.":"कुछ विवरण साझा करें और बताएँ कि आपको किस सहायता की आवश्यकता है।","No account required. Your query is sent to our service database.":"खाता बनाने की आवश्यकता नहीं। आपका प्रश्न हमारे सेवा डेटाबेस में भेजा जाएगा।","Your details":"आपका विवरण","Full name":"पूरा नाम","Mobile number":"मोबाइल नंबर","10–13 digits":"10–13 अंक","Email address":"ईमेल पता","Optional":"वैकल्पिक","How can we help?":"हम आपकी कैसे सहायता करें?","Service required":"आवश्यक सेवा","Choose a service":"सेवा चुनें","Describe your query":"अपने प्रश्न का विवरण दें","Minimum 10 characters":"कम से कम 10 अक्षर","Briefly describe the assistance you need...":"संक्षेप में बताएँ कि आपको किस सहायता की आवश्यकता है...","Do not share passwords, OTPs, bank PINs or other authentication secrets.":"पासवर्ड, OTP, बैंक PIN या अन्य गोपनीय जानकारी साझा न करें।","We couldn't send your query. Check your internet connection and try again.":"आपका प्रश्न नहीं भेजा जा सका। इंटरनेट कनेक्शन जाँचकर पुनः प्रयास करें।","Submit query":"प्रश्न जमा करें","By submitting, you are asking Jan Suvidha Kendra to contact you about this query.":"जमा करके आप जन सुविधा केंद्र को इस प्रश्न के संबंध में आपसे संपर्क करने की अनुमति देते हैं।","YOUR ACTIVITY":"आपकी गतिविधि","My queries":"मेरे प्रश्न","Reference details for queries saved on this device.":"इस डिवाइस पर सहेजे गए प्रश्नों का विवरण।","QUERY SUBMITTED":"प्रश्न जमा हुआ","We've received your query.":"हमें आपका प्रश्न मिल गया है।","Keep this reference number for future communication.":"भविष्य में संपर्क के लिए यह संदर्भ संख्या सुरक्षित रखें।","YOUR REFERENCE NUMBER":"आपकी संदर्भ संख्या","SUBMISSION DETAILS":"जमा करने का विवरण","SERVICE REQUESTED":"अनुरोधित सेवा","SUBMITTED ON":"जमा करने की तारीख","CURRENT STATUS":"वर्तमान स्थिति","Received":"प्राप्त","What happens next?":"आगे क्या होगा?","Keep your reference number safe for future communication.":"भविष्य में संपर्क के लिए संदर्भ संख्या सुरक्षित रखें।","Keep the contact number you provided available in case our team needs clarification.":"यदि हमारी टीम को जानकारी चाहिए, तो अपना दिया हुआ संपर्क नंबर उपलब्ध रखें।","Your query history is also saved on this device when local storage is available. This screen does not represent a live application-status tracker.":"स्थानीय स्टोरेज उपलब्ध होने पर आपके प्रश्नों का इतिहास इस डिवाइस पर सहेजा जाता है। यह स्क्रीन लाइव आवेदन स्थिति ट्रैकर नहीं है।","View my queries":"मेरे प्रश्न देखें","Explore more services":"अन्य सेवाएँ देखें","REFERENCE NUMBER":"संदर्भ संख्या","Nothing here yet":"अभी यहाँ कुछ नहीं है","Your submitted queries will appear here on this device.":"आपके जमा किए गए प्रश्न यहाँ इस डिवाइस पर दिखाई देंगे।","Explore services":"सेवाएँ देखें","Query history is stored locally on this device. It is not a live status tracker.":"प्रश्नों का इतिहास इस डिवाइस पर स्थानीय रूप से सहेजा जाता है। यह लाइव स्थिति ट्रैकर नहीं है।","Services":"सेवाएँ","Raise Query":"प्रश्न भेजें","My Queries":"मेरे प्रश्न","Income Certificate":"आय प्रमाणपत्र","Caste Certificate":"जाति प्रमाणपत्र","Domicile / Residence Certificate":"निवास प्रमाणपत्र","Birth Certificate":"जन्म प्रमाणपत्र","Pension Scheme Assistance":"पेंशन योजना सहायता","Ration Card Services":"राशन कार्ड सेवाएँ","Scholarship Application Assistance":"छात्रवृत्ति आवेदन सहायता","Utility Bill Payment Assistance":"बिजली/उपयोगिता बिल सहायता","PAN Card Assistance":"PAN कार्ड सहायता","Assistance with an income certificate for education, government schemes and official purposes.":"शिक्षा, सरकारी योजनाओं और आधिकारिक कार्यों के लिए आय प्रमाणपत्र संबंधी सहायता।","Guidance for a caste certificate application and its required documentation.":"जाति प्रमाणपत्र आवेदन और आवश्यक दस्तावेज़ों के लिए मार्गदर्शन।","Assistance with applying for a domicile or residence certificate.":"निवास प्रमाणपत्र के आवेदन में सहायता।","Guidance on birth certificate registration or correction.":"जन्म प्रमाणपत्र पंजीकरण या संशोधन के लिए मार्गदर्शन।","Guidance on pension schemes, eligibility, applications and status queries.":"पेंशन योजनाओं, पात्रता, आवेदन और स्थिति संबंधी प्रश्नों के लिए मार्गदर्शन।","Help with a new ration card, member addition or correction-related queries.":"नया राशन कार्ड, सदस्य जोड़ने या संशोधन संबंधी सहायता।","Guidance on scholarship eligibility, documents and application steps.":"छात्रवृत्ति पात्रता, दस्तावेज़ों और आवेदन प्रक्रिया के लिए मार्गदर्शन।","Assistance with electricity or supported utility bill payment queries.":"बिजली या उपलब्ध उपयोगिता बिल भुगतान संबंधी सहायता।","Guidance for PAN application, correction and required documents.":"PAN आवेदन, संशोधन और आवश्यक दस्तावेज़ों के लिए मार्गदर्शन।","Aadhaar card":"आधार कार्ड","Address proof":"पते का प्रमाण","Income proof":"आय का प्रमाण","Supporting caste document":"जाति संबंधी सहायक दस्तावेज़","Passport-size photograph":"पासपोर्ट आकार का फोटो","Hospital record, if available":"अस्पताल का रिकॉर्ड, यदि उपलब्ध हो","Parent identity proof":"माता-पिता का पहचान प्रमाण","Bank passbook":"बैंक पासबुक","Age or eligibility proof":"आयु या पात्रता का प्रमाण","Family members' Aadhaar cards":"परिवार के सदस्यों के आधार कार्ड","Existing ration card, if applicable":"मौजूदा राशन कार्ड, यदि लागू हो","Student ID":"छात्र पहचान पत्र","Previous marksheet":"पिछली अंकतालिका","Income certificate":"आय प्रमाणपत्र","Consumer/account number":"उपभोक्ता/खाता संख्या","Latest bill":"नवीनतम बिल","Date of birth proof":"जन्मतिथि का प्रमाण","Photograph and signature":"फोटो और हस्ताक्षर","Enter your full name":"अपना पूरा नाम दर्ज करें","Enter your contact number":"अपना मोबाइल नंबर दर्ज करें","name@example.com":"name@example.com","Citizen service query":"नागरिक सेवा संबंधी प्रश्न","Name required":"नाम आवश्यक है","Enter your full name (at least 2 characters).":"अपना पूरा नाम दर्ज करें (कम से कम 2 अक्षर)।","Check contact number":"मोबाइल नंबर जाँचें","Enter a valid number with 10 to 13 digits.":"10 से 13 अंकों का सही मोबाइल नंबर दर्ज करें।","Check email address":"ईमेल पता जाँचें","Enter a valid email address.":"सही ईमेल पता दर्ज करें।","Select a service":"सेवा चुनें","Choose the service you need help with.":"वह सेवा चुनें जिसके लिए आपको सहायता चाहिए।","More details needed":"अधिक विवरण आवश्यक","Please enter at least 10 characters.":"कृपया कम से कम 10 अक्षर दर्ज करें।"};
+const LanguageContext = React.createContext("en");
+function translateText(value, language) {
+  return language === "hi" && typeof value === "string" ? (HI[value] || value) : value;
+}
+function Text({ children, ...props }) {
+  const language = React.useContext(LanguageContext);
+  const translated = React.Children.map(children, child => typeof child === "string" ? translateText(child, language) : child);
+  return <RNText {...props}>{translated}</RNText>;
+}
 
 const C = { forest:"#123D32", green:"#2F6B50", mint:"#EAF3EC", soft:"#F2F7F3", bg:"#F5F7F5", white:"#FFFFFF", ink:"#172B23", muted:"#718078", line:"#E5EBE6", amber:"#94621C", amberBg:"#FFF6E5", red:"#B42318", redBg:"#FFF0EF" };
 const CATEGORIES = ["All","Certificates","Government Schemes","Education","Utility Services","Identity Services"];
@@ -39,6 +50,7 @@ function Field({ label, required, hint, error, children }) {
 
 export default function App() {
   const [tab,setTab] = useState("services");
+  const [language,setLanguage] = useState("en");
   const [search,setSearch] = useState("");
   const [category,setCategory] = useState("All");
   const [selected,setSelected] = useState(null);
@@ -59,11 +71,21 @@ export default function App() {
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
     return SERVICES.filter((s) => (category === "All" || s.category === category) &&
-      (!term || (s.title + " " + s.description + " " + s.category).toLowerCase().includes(term)));
+      (!term || (s.title + " " + s.description + " " + s.category + " " + translateText(s.title,"hi") + " " + translateText(s.description,"hi") + " " + translateText(s.category,"hi")).toLowerCase().includes(term)));
   },[search,category]);
   const selectedService = SERVICES.find((s) => s.id === serviceId);
   const preparedDocumentCount = selected ? selected.documents.filter((doc) => checkedDocuments[selected.id + ":" + doc]).length : 0;
   const toggleDocument = (doc) => setCheckedDocuments((current) => ({ ...current, [selected.id + ":" + doc]: !current[selected.id + ":" + doc] }));
+
+  useEffect(() => {
+    AsyncStorage.getItem("jsk_language").then(value => { if (value === "en" || value === "hi") setLanguage(value); }).catch(() => {});
+  },[]);
+
+  const toggleLanguage = async () => {
+    const next = language === "en" ? "hi" : "en";
+    setLanguage(next);
+    try { await AsyncStorage.setItem("jsk_language", next); } catch (error) { console.warn("Could not save language preference:", error); }
+  };
 
   useEffect(() => {
     let alive = true;
@@ -128,6 +150,9 @@ export default function App() {
   const Header = () => <View style={S.header}>
     <View style={S.brandMark}><Text style={S.brandMarkText}>JSK</Text></View>
     <View style={S.brandCopy}><Text style={S.brandName}>Jan Suvidha Kendra</Text><Text style={S.brandCaption}>Citizen service portal</Text></View>
+    <TouchableOpacity accessibilityRole="button" accessibilityLabel={language === "en" ? "Switch to Hindi" : "Switch to English"} onPress={toggleLanguage} style={S.languageToggle}>
+      <Text style={S.languageToggleText}>{language === "en" ? "हिंदी" : "EN"}</Text>
+    </TouchableOpacity>
     <TouchableOpacity accessibilityRole="button" accessibilityLabel="My queries" onPress={() => goTab("myqueries")} style={S.headerAction}>
       <Ionicons name="receipt-outline" size={20} color={C.forest}/>
     </TouchableOpacity>
@@ -156,11 +181,11 @@ export default function App() {
 
     <View style={S.sectionHeading}>
       <View><Text style={S.eyebrow}>GET STARTED</Text><Text style={S.sectionTitle}>Find a service</Text></View>
-      <Text style={S.foundCount}>{filtered.length} found</Text>
+      <Text style={S.foundCount}>{filtered.length}{language === "hi" ? " सेवाएँ मिलीं" : " found"}</Text>
     </View>
     <View style={S.searchBox}>
       <Ionicons name="search-outline" size={19} color="#829188"/>
-      <TextInput value={search} onChangeText={setSearch} placeholder="Search certificates, schemes..." placeholderTextColor="#97A39C" style={S.searchInput} returnKeyType="search"/>
+      <TextInput value={search} onChangeText={setSearch} placeholder={translateText("Search certificates, schemes...",language)} placeholderTextColor="#97A39C" style={S.searchInput} returnKeyType="search"/>
       {search ? <TouchableOpacity onPress={() => setSearch("")}><Ionicons name="close-circle" size={18} color="#97A39C"/></TouchableOpacity> : null}
     </View>
     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={S.categories}>
@@ -269,8 +294,8 @@ export default function App() {
       <View style={S.privacyStrip}><View style={S.privacyIcon}><Ionicons name="shield-checkmark-outline" size={18} color={C.forest}/></View><Text style={S.privacyText}>No account required. Your query is sent to our service database.</Text></View>
       <View style={S.formCard}>
         <Text style={S.formTitle}>Your details</Text>
-        <Field label="Full name" required error={errors.name}><TextInput value={name} onChangeText={change(setName,"name")} style={S.input} placeholder="Enter your full name" placeholderTextColor="#9AA69F" autoCapitalize="words"/></Field>
-        <Field label="Mobile number" required hint="10–13 digits" error={errors.phone}><TextInput value={phone} onChangeText={change(setPhone,"phone")} style={S.input} placeholder="Enter your contact number" placeholderTextColor="#9AA69F" keyboardType="phone-pad" maxLength={16}/></Field>
+        <Field label="Full name" required error={errors.name}><TextInput value={name} onChangeText={change(setName,"name")} style={S.input} placeholder={translateText("Enter your full name",language)} placeholderTextColor="#9AA69F" autoCapitalize="words"/></Field>
+        <Field label="Mobile number" required hint="10–13 digits" error={errors.phone}><TextInput value={phone} onChangeText={change(setPhone,"phone")} style={S.input} placeholder={translateText("Enter your contact number",language)} placeholderTextColor="#9AA69F" keyboardType="phone-pad" maxLength={16}/></Field>
         <Field label="Email address" hint="Optional" error={errors.email}><TextInput value={email} onChangeText={change(setEmail,"email")} style={S.input} placeholder="name@example.com" placeholderTextColor="#9AA69F" keyboardType="email-address" autoCapitalize="none" autoCorrect={false}/></Field>
       </View>
       <View style={S.formCard}>
@@ -282,7 +307,7 @@ export default function App() {
           </TouchableOpacity>
           {pickerOpen ? <View style={S.picker}>{SERVICES.map((service) => <TouchableOpacity key={service.id} onPress={() => {setServiceId(service.id);setPickerOpen(false);setErrors((old) => ({...old,serviceId:""}));}} style={[S.pickerRow,service.id === serviceId && S.pickerActive]}><Text style={[S.pickerText,service.id === serviceId && S.pickerTextActive]}>{service.title}</Text>{service.id === serviceId ? <Ionicons name="checkmark-circle" size={18} color={C.forest}/> : null}</TouchableOpacity>)}</View> : null}
         </Field>
-        <Field label="Describe your query" required hint="Minimum 10 characters" error={errors.message}><TextInput value={message} onChangeText={change(setMessage,"message")} style={[S.input,S.messageInput,errors.message && S.inputError]} placeholder="Briefly describe the assistance you need..." placeholderTextColor="#9AA69F" multiline textAlignVertical="top" maxLength={1000}/><Text style={S.counter}>{message.length}/1000</Text></Field>
+        <Field label="Describe your query" required hint="Minimum 10 characters" error={errors.message}><TextInput value={message} onChangeText={change(setMessage,"message")} style={[S.input,S.messageInput,errors.message && S.inputError]} placeholder={translateText("Briefly describe the assistance you need...",language)} placeholderTextColor="#9AA69F" multiline textAlignVertical="top" maxLength={1000}/><Text style={S.counter}>{message.length}/1000</Text></Field>
       </View>
       <View style={S.sensitive}><Ionicons name="lock-closed-outline" size={16} color={C.amber}/><Text style={S.sensitiveText}>Do not share passwords, OTPs, bank PINs or other authentication secrets.</Text></View>
       {errors.submit ? <View style={S.errorBanner}><Ionicons name="alert-circle-outline" size={18} color={C.red}/><Text style={S.errorText}>{errors.submit}</Text></View> : null}
@@ -374,7 +399,7 @@ export default function App() {
     <Text style={S.footnote}>Query history is stored locally on this device. It is not a live status tracker.</Text>
   </ScrollView>;
 
-  return <SafeAreaView style={S.safe}>
+  return <LanguageContext.Provider value={language}><SafeAreaView style={S.safe}>
     <StatusBar barStyle="dark-content" backgroundColor={C.bg}/>
     <Header/>
     <View style={S.content}>{selected ? <Details/> : tab === "services" ? <Home/> : tab === "raise" ? <QueryForm/> : tab === "success" && successRecord ? <Success/> : <Queries/>}</View>
@@ -385,7 +410,7 @@ export default function App() {
       <TouchableOpacity onPress={() => goTab("myqueries")} style={S.navItem}><View style={[S.navIcon,tab === "myqueries" && S.navIconActive]}><Ionicons name="receipt-outline" size={20} color={tab === "myqueries" ? C.forest : "#87938B"}/></View><Text style={[S.navLabel,tab === "myqueries" && S.navLabelActive]}>My Queries</Text></TouchableOpacity>
     </View>
     ) : null}
-  </SafeAreaView>;
+  </SafeAreaView></LanguageContext.Provider>;
 }
 
 const S = StyleSheet.create({
@@ -396,6 +421,8 @@ const S = StyleSheet.create({
   brandMarkText:{color:C.white,fontWeight:"900",fontSize:12,letterSpacing:0.5},
   brandCopy:{flex:1,marginLeft:12},brandName:{fontSize:14,fontWeight:"900",color:C.ink,letterSpacing:-0.2},brandCaption:{fontSize:10,color:C.muted,marginTop:3},
   headerAction:{width:40,height:40,borderRadius:13,backgroundColor:C.soft,alignItems:"center",justifyContent:"center"},
+  languageToggle:{minWidth:44,height:36,paddingHorizontal:9,borderRadius:12,backgroundColor:C.mint,alignItems:"center",justifyContent:"center",marginRight:7},
+  languageToggleText:{color:C.forest,fontSize:10,fontWeight:"900"},
   page:{paddingHorizontal:18,paddingTop:18,paddingBottom:28},
   hero:{minHeight:252,backgroundColor:C.forest,borderRadius:25,padding:23,overflow:"hidden",marginBottom:27},
   heroGlow:{position:"absolute",width:190,height:190,borderRadius:95,backgroundColor:"#245743",right:-65,top:-75,opacity:0.9},
@@ -545,7 +572,7 @@ const S = StyleSheet.create({
   emptyQueries:{backgroundColor:C.white,borderRadius:18,borderWidth:1,borderColor:C.line,alignItems:"center",padding:25,marginTop:3},
   emptyIcon:{width:54,height:54,borderRadius:18,backgroundColor:C.mint,alignItems:"center",justifyContent:"center"},
   emptyAction:{flexDirection:"row",alignItems:"center",gap:8,paddingHorizontal:14,paddingVertical:10,borderRadius:12,backgroundColor:C.mint,marginTop:6},
-  emptyActionText:{color:C.forest,fontSize:10,fontWeight:"900"}
+  emptyActionText:{color:C.forest,fontSize:10,fontWeight:"900"},
   successPage:{paddingHorizontal:20,paddingTop:26,paddingBottom:36,alignItems:"stretch"},
   successTopArt:{height:128,alignItems:"center",justifyContent:"center",marginBottom:12},
   successHaloOuter:{position:"absolute",width:118,height:118,borderRadius:59,backgroundColor:"#E3F0E6"},
