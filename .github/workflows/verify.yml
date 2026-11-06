@@ -42,6 +42,10 @@ jobs:
         working-directory: mobile
         run: npm ci --no-audit --no-fund
 
+      - name: Validate Expo project configuration and dependencies
+        working-directory: mobile
+        run: npx expo-doctor@latest
+
       - name: Export Android JavaScript bundle
         working-directory: mobile
         run: npx expo export --platform android
@@ -72,6 +76,38 @@ jobs:
           node --check server.js
           node --check scripts/set-staff-claim.cjs
           node --check scripts/remove-staff-claim.cjs
+
+  dependency-audit:
+    name: Report production dependency advisories
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Install mobile dependencies
+        working-directory: mobile
+        run: npm install --no-audit --no-fund
+
+      - name: Report mobile production advisories
+        working-directory: mobile
+        run: |
+          npm audit --omit=dev --json > mobile-audit.json || true
+          node -e "const r=require('./mobile-audit.json'); console.log(JSON.stringify(r.metadata?.vulnerabilities || {}, null, 2)); for (const [name,v] of Object.entries(r.vulnerabilities || {})) console.log(name + ': ' + v.severity + ' | direct=' + v.isDirect + ' | fix=' + JSON.stringify(v.fixAvailable));"
+
+      - name: Install server dependencies
+        working-directory: server
+        run: npm install --no-audit --no-fund
+
+      - name: Report server production advisories
+        working-directory: server
+        run: |
+          npm audit --omit=dev --json > server-audit.json || true
+          node -e "const r=require('./server-audit.json'); console.log(JSON.stringify(r.metadata?.vulnerabilities || {}, null, 2)); for (const [name,v] of Object.entries(r.vulnerabilities || {})) console.log(name + ': ' + v.severity + ' | direct=' + v.isDirect + ' | fix=' + JSON.stringify(v.fixAvailable));"
 
   refresh-lockfiles:
     name: Commit reconciled npm lockfiles
