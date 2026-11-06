@@ -20,3 +20,9 @@ Thumbs.db
 # Local demo-server data
 server/data/*.json
 !server/data/.gitkeep
+
+# Firebase Admin credentials (never commit privileged keys)
+.secrets/
+*service-account*.json
+*serviceAccount*.json
+*firebase-adminsdk*.json
