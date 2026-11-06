@@ -19,6 +19,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: jsk-verify-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   mobile:
     name: Mobile clean install and Android bundle
@@ -147,10 +151,28 @@ jobs:
         run: |
           if ! git diff --quiet -- mobile/package-lock.json server/package-lock.json; then
             git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git config user.email "41898282+users.noreply.github.com"
             git add mobile/package-lock.json server/package-lock.json
             git commit -m "chore: synchronize npm lockfiles"
-            git push origin HEAD:main
+
+            # Another update can reach main while CI is generating lockfiles.
+            # Rebase our lockfile-only commit before pushing; never force-push.
+            for attempt in 1 2 3; do
+              git fetch origin main
+              if ! git rebase origin/main; then
+                git rebase --abort || true
+                echo "Could not rebase lockfile commit onto latest main." >&2
+                exit 1
+              fi
+              if git push origin HEAD:main; then
+                exit 0
+              fi
+              echo "Lockfile push attempt ${attempt} was rejected; retrying after fetching main."
+              sleep 2
+            done
+
+            echo "Could not push lockfile sync after 3 attempts." >&2
+            exit 1
           else
             echo "npm lockfiles already match package manifests."
           fi
