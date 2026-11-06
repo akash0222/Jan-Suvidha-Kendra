@@ -66,6 +66,10 @@ jobs:
         working-directory: server
         run: npm install --no-audit --no-fund
 
+      - name: Apply compatible server security fixes
+        working-directory: server
+        run: npm audit fix --package-lock-only --no-fund
+
       - name: Verify clean server install
         working-directory: server
         run: npm ci --no-audit --no-fund
@@ -134,6 +138,10 @@ jobs:
       - name: Refresh server lockfile
         working-directory: server
         run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+
+      - name: Apply compatible server security fixes
+        working-directory: server
+        run: npm audit fix --package-lock-only --ignore-scripts --no-fund
 
       - name: Commit lockfile updates when needed
         run: |
