@@ -53,6 +53,7 @@ export default function App() {
   const submittingRef = useRef(false);
   const [history,setHistory] = useState([]);
   const [success,setSuccess] = useState("");
+  const [checkedDocuments,setCheckedDocuments] = useState({});
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -60,6 +61,8 @@ export default function App() {
       (!term || (s.title + " " + s.description + " " + s.category).toLowerCase().includes(term)));
   },[search,category]);
   const selectedService = SERVICES.find((s) => s.id === serviceId);
+  const preparedDocumentCount = selected ? selected.documents.filter((doc) => checkedDocuments[selected.id + ":" + doc]).length : 0;
+  const toggleDocument = (doc) => setCheckedDocuments((current) => ({ ...current, [selected.id + ":" + doc]: !current[selected.id + ":" + doc] }));
 
   useEffect(() => {
     let alive = true;
@@ -129,7 +132,7 @@ export default function App() {
     </TouchableOpacity>
   </View>;
 
-  const ServiceCard = ({item}) => <TouchableOpacity activeOpacity={0.88} style={S.serviceCard} onPress={() => setSelected(item)}>
+  const ServiceCard = ({item}) => <TouchableOpacity activeOpacity={0.88} style={S.serviceCard} onPress={() => { setCheckedDocuments({}); setSelected(item); }}>
     <View style={S.serviceTop}><View style={S.serviceIcon}><Ionicons name={item.icon} size={22} color={C.forest}/></View><Ionicons name="arrow-forward" size={18} color="#99A69E"/></View>
     <Text style={S.serviceTitle}>{item.title}</Text>
     <Text style={S.serviceCategory}>{item.category}</Text>
@@ -177,21 +180,86 @@ export default function App() {
   </ScrollView>;
 
   const Details = () => <ScrollView contentContainerStyle={S.page} showsVerticalScrollIndicator={false}>
-    <TouchableOpacity style={S.back} onPress={() => setSelected(null)}><Ionicons name="arrow-back" size={18} color={C.forest}/><Text style={S.backText}>All services</Text></TouchableOpacity>
+    <TouchableOpacity style={S.back} onPress={() => setSelected(null)}>
+      <Ionicons name="arrow-back" size={18} color={C.forest}/>
+      <Text style={S.backText}>All services</Text>
+    </TouchableOpacity>
     <View style={S.detailHero}>
-      <View style={S.detailIcon}><Ionicons name={selected.icon} size={28} color={C.forest}/></View>
-      <View style={S.detailTag}><Text style={S.detailTagText}>{selected.category}</Text></View>
-      <Text style={S.detailTitle}>{selected.title}</Text><Text style={S.detailDesc}>{selected.description}</Text>
+      <View style={S.detailGlowLarge}/>
+      <View style={S.detailGlowSmall}/>
+      <View style={S.detailHeroTop}>
+        <View style={S.detailIcon}><Ionicons name={selected.icon} size={29} color={C.forest}/></View>
+        <View style={S.detailTag}><Text style={S.detailTagText}>{selected.category}</Text></View>
+      </View>
+      <Text style={S.detailEyebrow}>SERVICE INFORMATION</Text>
+      <Text style={S.detailTitle}>{selected.title}</Text>
+      <Text style={S.detailDesc}>{selected.description}</Text>
+      <View style={S.detailAssurance}>
+        <Ionicons name="information-circle-outline" size={15} color="#C7DDCD"/>
+        <Text style={S.detailAssuranceText}>Guidance to help you prepare before contacting the relevant authority.</Text>
+      </View>
     </View>
+
     <View style={S.infoCard}>
-      <View style={S.cardHeading}><View style={S.cardHeadingIcon}><Ionicons name="documents-outline" size={18} color={C.forest}/></View><View style={S.flex}><Text style={S.cardHeadingTitle}>Documents to prepare</Text><Text style={S.cardHeadingSub}>You may be asked for these documents</Text></View></View>
-      {selected.documents.map((doc,index) => <View key={doc} style={[S.documentRow,index === selected.documents.length-1 && S.lastRow]}><Ionicons name="checkmark-circle" size={19} color={C.green}/><Text style={S.documentText}>{doc}</Text></View>)}
+      <View style={S.cardHeading}>
+        <View style={S.cardHeadingIcon}><Ionicons name="clipboard-outline" size={18} color={C.forest}/></View>
+        <View style={S.flex}>
+          <Text style={S.cardHeadingTitle}>Document preparation</Text>
+          <Text style={S.cardHeadingSub}>A helpful list to organise before you apply</Text>
+        </View>
+      </View>
+      <View style={S.checklistSummary}>
+        <View>
+          <Text style={S.checklistProgressLabel}>YOUR PREPARATION</Text>
+          <Text style={S.checklistProgressValue}>{preparedDocumentCount} of {selected.documents.length} ready</Text>
+        </View>
+        <View style={S.checklistCountBadge}><Ionicons name="checkmark-done-outline" size={16} color={C.green}/></View>
+      </View>
+      <View style={S.progressTrack}>
+        <View style={[S.progressFill,{width:(preparedDocumentCount / Math.max(selected.documents.length,1) * 100) + "%"}]}/>
+      </View>
+      {selected.documents.map((doc,index) => {
+        const key = selected.id + ":" + doc;
+        const checked = !!checkedDocuments[key];
+        return (
+          <TouchableOpacity key={doc} activeOpacity={0.8} accessibilityRole="checkbox" accessibilityState={{checked}} onPress={() => toggleDocument(doc)} style={[S.documentCheckRow,index === selected.documents.length-1 && S.lastRow,checked && S.documentCheckRowDone]}>
+            <View style={[S.documentNumber,checked && S.documentNumberDone]}>
+              {checked ? <Ionicons name="checkmark" size={14} color={C.white}/> : <Text style={S.documentNumberText}>{String(index+1).padStart(2,"0")}</Text>}
+            </View>
+            <Text style={[S.documentText,checked && S.documentTextDone]}>{doc}</Text>
+            <Ionicons name={checked ? "checkmark-circle" : "ellipse-outline"} size={20} color={checked ? C.green : "#B4C0B8"}/>
+          </TouchableOpacity>
+        );
+      })}
+      <View style={S.checklistDisclaimer}>
+        <Ionicons name="alert-circle-outline" size={15} color={C.amber}/>
+        <Text style={S.checklistDisclaimerText}>This is an indicative preparation list, not an official or exhaustive document requirement. Confirm the latest checklist with the responsible authority.</Text>
+      </View>
     </View>
-    <View style={S.processingCard}><View style={S.processingIcon}><Ionicons name="time-outline" size={20} color={C.amber}/></View><View style={S.flex}><Text style={S.processingTitle}>Processing information</Text><Text style={S.processingText}>{selected.time}. Actual timelines depend on the relevant department and document verification.</Text></View></View>
-    <View style={S.guidanceCard}><View style={S.guidanceHeading}><Ionicons name="information-circle-outline" size={19} color={C.forest}/><Text style={S.guidanceTitle}>Before you apply</Text></View>
-      <Text style={S.guidanceText}>• Keep original documents and clear copies ready.</Text><Text style={S.guidanceText}>• Ensure the details on your documents are consistent.</Text><Text style={S.guidanceText}>• Additional documents may be requested by the concerned authority.</Text><Text style={S.guidanceText}>• Final eligibility, fees and approval are decided by the relevant department.</Text>
+
+    <View style={S.processingCard}>
+      <View style={S.processingIcon}><Ionicons name="time-outline" size={20} color={C.amber}/></View>
+      <View style={S.flex}>
+        <Text style={S.processingTitle}>Processing information</Text>
+        <Text style={S.processingText}>{selected.time}. Actual timelines depend on the relevant department, application completeness and document verification.</Text>
+      </View>
+    </View>
+
+    <View style={S.guidanceCard}>
+      <View style={S.guidanceHeading}>
+        <View style={S.guidanceIcon}><Ionicons name="bulb-outline" size={17} color={C.forest}/></View>
+        <View style={S.flex}>
+          <Text style={S.guidanceTitle}>Before you visit</Text>
+          <Text style={S.guidanceSubtitle}>A few general preparation tips</Text>
+        </View>
+      </View>
+      <View style={S.guidanceStep}><View style={S.guidanceStepNumber}><Text style={S.guidanceStepNumberText}>1</Text></View><Text style={S.guidanceText}>Keep original documents and clear copies ready.</Text></View>
+      <View style={S.guidanceStep}><View style={S.guidanceStepNumber}><Text style={S.guidanceStepNumberText}>2</Text></View><Text style={S.guidanceText}>Check that names, dates and other details are consistent across documents.</Text></View>
+      <View style={S.guidanceStep}><View style={S.guidanceStepNumber}><Text style={S.guidanceStepNumberText}>3</Text></View><Text style={S.guidanceText}>Ask the responsible authority whether any additional documents, fees or appointments apply.</Text></View>
+      <Text style={S.guidanceDisclaimer}>Eligibility, fees, acceptance and approval are determined only by the relevant department.</Text>
     </View>
     <Button title="Ask about this service" onPress={() => startQuery(selected)}/>
+    <Text style={S.detailFootnote}>Need help with this service? Submit a query and keep the reference number for future communication.</Text>
   </ScrollView>;
 
   const QueryForm = () => <KeyboardAvoidingView style={S.flex} behavior={Platform.OS === "ios" ? "padding" : undefined}>
@@ -295,7 +363,51 @@ const S = StyleSheet.create({
   navIconActive:{backgroundColor:C.mint},navLabel:{fontSize:9,color:"#87938B",fontWeight:"700"},navLabelActive:{color:C.forest,fontWeight:"900"},
   back:{flexDirection:"row",alignItems:"center",gap:8,marginBottom:16,alignSelf:"flex-start",paddingVertical:7,paddingRight:12},
   backText:{color:C.forest,fontSize:11,fontWeight:"800"},
-  detailHero:{backgroundColor:C.forest,borderRadius:22,padding:21,marginBottom:14},
+  detailHero:{backgroundColor:C.forest,borderRadius:22,padding:21,marginBottom:14,overflow:"hidden"},
+  detailGlowLarge:{position:"absolute",width:180,height:180,borderRadius:90,backgroundColor:"#245743",right:-70,top:-80,opacity:0.9},
+  detailGlowSmall:{position:"absolute",width:100,height:100,borderRadius:50,borderWidth:1,borderColor:"#5A876D",right:-25,bottom:-45},
+  detailHeroTop:{flexDirection:"row",alignItems:"center",justifyContent:"space-between"},
+  detailIcon:{width:54,height:54,borderRadius:17,backgroundColor:"#DDEBE0",alignItems:"center",justifyContent:"center",marginBottom:16},
+  detailEyebrow:{color:"#BFD6C6",fontSize:8,letterSpacing:1.2,fontWeight:"900",marginTop:1},
+  detailTag:{alignSelf:"flex-start",backgroundColor:"#285641",borderRadius:20,paddingHorizontal:10,paddingVertical:6},
+  detailTagText:{color:"#D8E8DC",fontSize:9,fontWeight:"800"},
+  detailTitle:{color:C.white,fontSize:25,lineHeight:31,fontWeight:"900",marginTop:8,letterSpacing:-0.5},
+  detailDesc:{color:"#D2E2D7",fontSize:11,lineHeight:18,marginTop:8},
+  detailAssurance:{flexDirection:"row",alignItems:"flex-start",gap:7,borderTopWidth:1,borderTopColor:"#3C6B53",paddingTop:12,marginTop:15},
+  detailAssuranceText:{color:"#C7DDCD",fontSize:9,lineHeight:14,flex:1},
+  infoCard:{backgroundColor:C.white,borderWidth:1,borderColor:C.line,borderRadius:18,padding:17,marginBottom:12},
+  cardHeading:{flexDirection:"row",alignItems:"center",marginBottom:14},
+  cardHeadingIcon:{width:37,height:37,backgroundColor:C.mint,borderRadius:12,alignItems:"center",justifyContent:"center",marginRight:10},
+  cardHeadingTitle:{color:C.ink,fontSize:13,fontWeight:"900"},cardHeadingSub:{color:C.muted,fontSize:9,marginTop:3},
+  checklistSummary:{flexDirection:"row",alignItems:"center",justifyContent:"space-between",marginBottom:8},
+  checklistProgressLabel:{color:"#96A29A",fontSize:8,letterSpacing:0.9,fontWeight:"900"},
+  checklistProgressValue:{color:C.forest,fontSize:13,fontWeight:"900",marginTop:3},
+  checklistCountBadge:{width:32,height:32,borderRadius:11,backgroundColor:C.mint,alignItems:"center",justifyContent:"center"},
+  progressTrack:{height:6,backgroundColor:"#EDF1ED",borderRadius:5,overflow:"hidden",marginBottom:7},
+  progressFill:{height:6,backgroundColor:C.green,borderRadius:5},
+  documentCheckRow:{minHeight:49,flexDirection:"row",gap:10,alignItems:"center",paddingVertical:9,borderTopWidth:1,borderTopColor:"#F0F3F0"},
+  documentCheckRowDone:{backgroundColor:"#F7FBF7"},
+  documentNumber:{width:27,height:27,borderRadius:9,backgroundColor:C.soft,alignItems:"center",justifyContent:"center"},
+  documentNumberDone:{backgroundColor:C.green},
+  documentNumberText:{color:C.green,fontSize:9,fontWeight:"900"},
+  documentText:{color:C.ink,fontSize:11,flex:1},documentTextDone:{color:C.green,fontWeight:"700"},
+  lastRow:{paddingBottom:5},
+  checklistDisclaimer:{flexDirection:"row",alignItems:"flex-start",gap:7,backgroundColor:C.amberBg,borderRadius:11,padding:10,marginTop:12},
+  checklistDisclaimerText:{color:"#80612E",fontSize:9,lineHeight:14,flex:1},
+  processingCard:{flexDirection:"row",gap:11,backgroundColor:C.amberBg,borderRadius:16,padding:14,marginBottom:12},
+  processingIcon:{width:36,height:36,borderRadius:12,backgroundColor:"#FFE9BF",alignItems:"center",justifyContent:"center"},
+  processingTitle:{color:"#7A5214",fontSize:11,fontWeight:"900",marginTop:2},processingText:{color:"#896B3C",fontSize:10,lineHeight:16,marginTop:4},
+  guidanceCard:{backgroundColor:C.soft,borderRadius:16,padding:16,marginBottom:5},
+  guidanceHeading:{flexDirection:"row",alignItems:"center",gap:9,marginBottom:12},
+  guidanceIcon:{width:34,height:34,borderRadius:11,backgroundColor:C.white,alignItems:"center",justifyContent:"center"},
+  guidanceTitle:{color:C.forest,fontSize:12,fontWeight:"900"},guidanceSubtitle:{color:C.muted,fontSize:9,marginTop:3},
+  guidanceStep:{flexDirection:"row",alignItems:"flex-start",gap:10,marginTop:9},
+  guidanceStepNumber:{width:22,height:22,borderRadius:8,backgroundColor:"#DDEBE0",alignItems:"center",justifyContent:"center"},
+  guidanceStepNumberText:{color:C.forest,fontSize:9,fontWeight:"900"},
+  guidanceText:{color:"#64736A",fontSize:10,lineHeight:16,flex:1,paddingTop:2},
+  guidanceDisclaimer:{color:"#929D96",fontSize:8,lineHeight:13,marginTop:14,borderTopWidth:1,borderTopColor:"#E2EAE3",paddingTop:10},
+  detailFootnote:{color:"#929D96",fontSize:9,lineHeight:14,textAlign:"center",marginTop:12,paddingHorizontal:8},
+
   detailIcon:{width:52,height:52,borderRadius:16,backgroundColor:"#DDEBE0",alignItems:"center",justifyContent:"center",marginBottom:16},
   detailTag:{alignSelf:"flex-start",backgroundColor:"#285641",borderRadius:20,paddingHorizontal:10,paddingVertical:6},
   detailTagText:{color:"#D8E8DC",fontSize:9,fontWeight:"800"},
