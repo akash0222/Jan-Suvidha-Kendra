@@ -1,0 +1,22 @@
+# Node / Expo dependencies and generated output
+node_modules/
+**/node_modules/
+.expo/
+**/.expo/
+dist/
+web-build/
+coverage/
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+
+# Logs and operating-system files
+*.log
+.DS_Store
+Thumbs.db
+
+# Local demo-server data
+server/data/*.json
+!server/data/.gitkeep
