@@ -53,6 +53,7 @@ export default function App() {
   const submittingRef = useRef(false);
   const [history,setHistory] = useState([]);
   const [success,setSuccess] = useState("");
+  const [successRecord,setSuccessRecord] = useState(null);
   const [checkedDocuments,setCheckedDocuments] = useState({});
 
   const filtered = useMemo(() => {
@@ -115,8 +116,8 @@ export default function App() {
       }
       entry.id = "JSK-" + ref.id.slice(-8).toUpperCase();
       const updated = [entry,...history];
-      setHistory(updated); setSuccess(entry.id); setName(""); setPhone(""); setEmail(""); setMessage("");
-      setServiceId(""); setPickerOpen(false); setErrors({}); setTab("myqueries");
+      setHistory(updated); setSuccess(entry.id); setSuccessRecord({...entry}); setName(""); setPhone(""); setEmail(""); setMessage("");
+      setServiceId(""); setPickerOpen(false); setErrors({}); setTab("success");
       try { await AsyncStorage.setItem("jsk_queries",JSON.stringify(updated)); }
       catch (error) { console.warn("Firestore saved the query; local history was unavailable:",error); }
     } finally {
@@ -290,6 +291,78 @@ export default function App() {
     </ScrollView>
   </KeyboardAvoidingView>;
 
+  const Success = () => <ScrollView contentContainerStyle={S.successPage} showsVerticalScrollIndicator={false}>
+    <View style={S.successTopArt}>
+      <View style={S.successHaloOuter}/>
+      <View style={S.successHaloInner}/>
+      <View style={S.successCheck}><Ionicons name="checkmark" size={38} color={C.white}/></View>
+    </View>
+    <Text style={S.successEyebrow}>SUBMISSION CONFIRMED</Text>
+    <Text style={S.successPageTitle}>Your query has been received.</Text>
+    <Text style={S.successPageSubtitle}>Thank you for contacting Jan Suvidha Kendra. Your request has been saved successfully.</Text>
+
+    <View style={S.successReferenceCard}>
+      <View style={S.successReferenceTop}>
+        <View>
+          <Text style={S.successReferenceLabel}>YOUR REFERENCE NUMBER</Text>
+          <Text selectable style={S.successReferenceValue}>{successRecord?.id || success}</Text>
+        </View>
+        <View style={S.successReferenceIcon}><Ionicons name="receipt-outline" size={20} color="#D5E5D9"/></View>
+      </View>
+      <View style={S.copyHintRow}>
+        <Ionicons name="copy-outline" size={13} color="#C7DDCD"/>
+        <Text style={S.copyHint}>Press and hold the reference number to copy it.</Text>
+      </View>
+    </View>
+
+    <View style={S.successSummaryCard}>
+      <Text style={S.successSummaryHeading}>Submission details</Text>
+      <View style={S.successSummaryRow}>
+        <View style={S.successSummaryIcon}><Ionicons name="document-text-outline" size={16} color={C.forest}/></View>
+        <View style={S.flex}>
+          <Text style={S.summaryLabel}>SERVICE REQUESTED</Text>
+          <Text style={S.summaryValue}>{successRecord?.serviceTitle || "Citizen service query"}</Text>
+        </View>
+      </View>
+      <View style={S.summaryDivider}/>
+      <View style={S.successSummaryRow}>
+        <View style={S.successSummaryIcon}><Ionicons name="time-outline" size={16} color={C.forest}/></View>
+        <View style={S.flex}>
+          <Text style={S.summaryLabel}>SUBMITTED ON</Text>
+          <Text style={S.summaryValue}>{successRecord?.createdAt ? new Date(successRecord.createdAt).toLocaleString() : "Just now"}</Text>
+        </View>
+      </View>
+      <View style={S.summaryDivider}/>
+      <View style={S.successSummaryRow}>
+        <View style={S.successSummaryIcon}><Ionicons name="checkmark-circle-outline" size={16} color={C.green}/></View>
+        <View style={S.flex}>
+          <Text style={S.summaryLabel}>CURRENT STATUS</Text>
+          <Text style={S.summaryValue}>Received</Text>
+        </View>
+        <View style={S.receivedPill}><View style={S.receivedDot}/><Text style={S.receivedText}>Received</Text></View>
+      </View>
+    </View>
+
+    <View style={S.nextStepsCard}>
+      <View style={S.nextStepsHeading}>
+        <View style={S.nextStepsIcon}><Ionicons name="information-circle-outline" size={18} color={C.forest}/></View>
+        <Text style={S.nextStepsTitle}>What happens next?</Text>
+      </View>
+      <View style={S.nextStepRow}>
+        <View style={S.nextStepNumber}><Text style={S.nextStepNumberText}>1</Text></View>
+        <Text style={S.nextStepText}>Keep your reference number safe for future communication.</Text>
+      </View>
+      <View style={S.nextStepRow}>
+        <View style={S.nextStepNumber}><Text style={S.nextStepNumberText}>2</Text></View>
+        <Text style={S.nextStepText}>Keep the contact number you provided available in case our team needs clarification.</Text>
+      </View>
+      <Text style={S.successDisclaimer}>Your query history is also saved on this device when local storage is available. This screen does not represent a live application-status tracker.</Text>
+    </View>
+
+    <Button title="View my queries" onPress={() => goTab("myqueries")} icon="receipt-outline"/>
+    <Button title="Explore more services" onPress={() => goTab("services")} light icon="grid-outline"/>
+  </ScrollView>;
+
   const Queries = () => <ScrollView contentContainerStyle={S.page} showsVerticalScrollIndicator={false}>
     <View style={S.intro}><Text style={S.eyebrow}>YOUR ACTIVITY</Text><Text style={S.pageTitle}>My queries</Text><Text style={S.pageSubtitle}>Reference details for queries saved on this device.</Text></View>
     {success ? <View style={S.successCard}><View style={S.successIcon}><Ionicons name="checkmark" size={24} color={C.white}/></View><Text style={S.successEyebrow}>QUERY SUBMITTED</Text><Text style={S.successTitle}>We've received your query.</Text><Text style={S.successDesc}>Keep this reference number for future communication.</Text><View style={S.referenceBox}><Text style={S.referenceLabel}>YOUR REFERENCE NUMBER</Text><Text selectable style={S.referenceValue}>{success}</Text></View></View> : null}
@@ -304,12 +377,14 @@ export default function App() {
   return <SafeAreaView style={S.safe}>
     <StatusBar barStyle="dark-content" backgroundColor={C.bg}/>
     <Header/>
-    <View style={S.content}>{selected ? <Details/> : tab === "services" ? <Home/> : tab === "raise" ? <QueryForm/> : <Queries/>}</View>
+    <View style={S.content}>{selected ? <Details/> : tab === "services" ? <Home/> : tab === "raise" ? <QueryForm/> : tab === "success" && successRecord ? <Success/> : <Queries/>}</View>
+    {tab !== "success" ? (
     <View style={S.bottomNav}>
       <TouchableOpacity onPress={() => goTab("services")} style={S.navItem}><View style={[S.navIcon,(tab === "services" || selected) && S.navIconActive]}><Ionicons name="grid-outline" size={20} color={(tab === "services" || selected) ? C.forest : "#87938B"}/></View><Text style={[S.navLabel,(tab === "services" || selected) && S.navLabelActive]}>Services</Text></TouchableOpacity>
       <TouchableOpacity onPress={() => startQuery()} style={S.navItem}><View style={[S.navIcon,tab === "raise" && S.navIconActive]}><Ionicons name="chatbubble-ellipses-outline" size={20} color={tab === "raise" ? C.forest : "#87938B"}/></View><Text style={[S.navLabel,tab === "raise" && S.navLabelActive]}>Raise Query</Text></TouchableOpacity>
       <TouchableOpacity onPress={() => goTab("myqueries")} style={S.navItem}><View style={[S.navIcon,tab === "myqueries" && S.navIconActive]}><Ionicons name="receipt-outline" size={20} color={tab === "myqueries" ? C.forest : "#87938B"}/></View><Text style={[S.navLabel,tab === "myqueries" && S.navLabelActive]}>My Queries</Text></TouchableOpacity>
     </View>
+    ) : null}
   </SafeAreaView>;
 }
 
@@ -471,4 +546,39 @@ const S = StyleSheet.create({
   emptyIcon:{width:54,height:54,borderRadius:18,backgroundColor:C.mint,alignItems:"center",justifyContent:"center"},
   emptyAction:{flexDirection:"row",alignItems:"center",gap:8,paddingHorizontal:14,paddingVertical:10,borderRadius:12,backgroundColor:C.mint,marginTop:6},
   emptyActionText:{color:C.forest,fontSize:10,fontWeight:"900"}
+  successPage:{paddingHorizontal:20,paddingTop:26,paddingBottom:36,alignItems:"stretch"},
+  successTopArt:{height:128,alignItems:"center",justifyContent:"center",marginBottom:12},
+  successHaloOuter:{position:"absolute",width:118,height:118,borderRadius:59,backgroundColor:"#E3F0E6"},
+  successHaloInner:{position:"absolute",width:88,height:88,borderRadius:44,backgroundColor:"#CBE2D0"},
+  successCheck:{width:64,height:64,borderRadius:22,backgroundColor:C.green,alignItems:"center",justifyContent:"center",elevation:3,shadowColor:"#123D32",shadowOffset:{width:0,height:3},shadowOpacity:0.14,shadowRadius:8},
+  successEyebrow:{color:C.green,fontSize:9,letterSpacing:1.5,fontWeight:"900",textAlign:"center",marginTop:2},
+  successPageTitle:{color:C.ink,fontSize:25,lineHeight:31,fontWeight:"900",textAlign:"center",letterSpacing:-0.5,marginTop:9},
+  successPageSubtitle:{color:C.muted,fontSize:11,lineHeight:18,textAlign:"center",marginTop:8,marginBottom:20,paddingHorizontal:8},
+  successReferenceCard:{backgroundColor:C.forest,borderRadius:19,padding:17,marginBottom:13},
+  successReferenceTop:{flexDirection:"row",alignItems:"center",justifyContent:"space-between"},
+  successReferenceLabel:{color:"#BBD8C4",fontSize:8,letterSpacing:1.1,fontWeight:"900"},
+  successReferenceValue:{color:C.white,fontSize:23,fontWeight:"900",letterSpacing:1.2,marginTop:8},
+  successReferenceIcon:{width:42,height:42,borderRadius:14,backgroundColor:"#285641",alignItems:"center",justifyContent:"center"},
+  copyHintRow:{flexDirection:"row",alignItems:"center",gap:6,marginTop:13,borderTopWidth:1,borderTopColor:"#3B694F",paddingTop:11},
+  copyHint:{color:"#C7DDCD",fontSize:9},
+  successSummaryCard:{backgroundColor:C.white,borderWidth:1,borderColor:C.line,borderRadius:18,padding:16,marginBottom:13},
+  successSummaryHeading:{color:C.ink,fontSize:13,fontWeight:"900",marginBottom:13},
+  successSummaryRow:{flexDirection:"row",alignItems:"center",gap:10},
+  successSummaryIcon:{width:34,height:34,borderRadius:11,backgroundColor:C.mint,alignItems:"center",justifyContent:"center"},
+  summaryLabel:{color:"#96A29A",fontSize:8,letterSpacing:0.8,fontWeight:"900"},
+  summaryValue:{color:C.ink,fontSize:10,fontWeight:"800",marginTop:4},
+  summaryDivider:{height:1,backgroundColor:"#F0F3F0",marginVertical:12},
+  receivedPill:{flexDirection:"row",alignItems:"center",gap:5,backgroundColor:C.mint,borderRadius:20,paddingHorizontal:8,paddingVertical:6},
+  receivedDot:{width:6,height:6,borderRadius:3,backgroundColor:C.green},
+  receivedText:{color:C.green,fontSize:8,fontWeight:"900"},
+  nextStepsCard:{backgroundColor:C.soft,borderRadius:17,padding:16,marginBottom:5},
+  nextStepsHeading:{flexDirection:"row",alignItems:"center",gap:9,marginBottom:11},
+  nextStepsIcon:{width:33,height:33,borderRadius:11,backgroundColor:C.white,alignItems:"center",justifyContent:"center"},
+  nextStepsTitle:{color:C.forest,fontSize:12,fontWeight:"900"},
+  nextStepRow:{flexDirection:"row",alignItems:"flex-start",gap:9,marginTop:8},
+  nextStepNumber:{width:21,height:21,borderRadius:8,backgroundColor:"#DDEBE0",alignItems:"center",justifyContent:"center"},
+  nextStepNumberText:{color:C.forest,fontSize:9,fontWeight:"900"},
+  nextStepText:{color:"#64736A",fontSize:10,lineHeight:16,flex:1,paddingTop:2},
+  successDisclaimer:{color:"#929D96",fontSize:8,lineHeight:13,marginTop:13,borderTopWidth:1,borderTopColor:"#E2EAE3",paddingTop:10}
+
 });
