@@ -130,7 +130,7 @@ export default function App() {
   </View>;
 
   const ServiceCard = ({item}) => <TouchableOpacity activeOpacity={0.88} style={S.serviceCard} onPress={() => setSelected(item)}>
-    <View style={S.serviceTop}><View style={S.serviceIcon}><Ionicons name={item.icon} size={22} color={C.forest}/></View><Ionicons name="arrow-up-right" size={18} color="#99A69E"/></View>
+    <View style={S.serviceTop}><View style={S.serviceIcon}><Ionicons name={item.icon} size={22} color={C.forest}/></View><Ionicons name="arrow-forward" size={18} color="#99A69E"/></View>
     <Text style={S.serviceTitle}>{item.title}</Text>
     <Text style={S.serviceCategory}>{item.category}</Text>
     <Text numberOfLines={2} style={S.serviceDescription}>{item.description}</Text>
