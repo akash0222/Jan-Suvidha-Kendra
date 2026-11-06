@@ -111,7 +111,7 @@ export default function App() {
     const digits = phone.replace(/[^0-9]/g,"");
     const nextErrors = {};
     if (name.trim().length < 2) nextErrors.name = "Enter your full name (at least 2 characters).";
-    if (digits.length < 10 || digits.length > 13 || !/^[+0-9\\s()\\-]+$/.test(phone.trim())) nextErrors.phone = "Enter a valid number with 10 to 13 digits.";
+    if (digits.length < 10 || digits.length > 13 || !/^\+?[0-9\s()-]+$/.test(phone.trim())) nextErrors.phone = "Enter a valid number with 10 to 13 digits.";
     if (email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) nextErrors.email = "Enter a valid email address.";
     if (!serviceId) nextErrors.serviceId = "Choose the service you need help with.";
     if (message.trim().length < 10) nextErrors.message = "Please enter at least 10 characters.";
