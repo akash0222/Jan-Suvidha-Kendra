@@ -26,3 +26,8 @@ server/data/*.json
 *service-account*.json
 *serviceAccount*.json
 *firebase-adminsdk*.json
+
+# Firebase Admin private key
+jan-suvidha-kendra-admin.json
+**/jan-suvidha-kendra-admin.json
+*firebase-admin*.json
