@@ -1,0 +1,112 @@
+name: Verify Jan Suvidha Kendra
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "mobile/**"
+      - "server/**"
+      - "firestore.rules"
+      - ".github/workflows/verify.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "mobile/**"
+      - "server/**"
+      - "firestore.rules"
+      - ".github/workflows/verify.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  mobile:
+    name: Mobile clean install and Android bundle
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      # npm install first reconciles the committed lockfile with package.json.
+      # npm ci then proves the reconciled lockfile supports a reproducible clean install.
+      - name: Reconcile mobile lockfile
+        working-directory: mobile
+        run: npm install --no-audit --no-fund
+
+      - name: Verify clean mobile install
+        working-directory: mobile
+        run: npm ci --no-audit --no-fund
+
+      - name: Export Android JavaScript bundle
+        working-directory: mobile
+        run: npx expo export --platform android
+
+  server:
+    name: Server dependency and syntax checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Reconcile server lockfile
+        working-directory: server
+        run: npm install --no-audit --no-fund
+
+      - name: Verify clean server install
+        working-directory: server
+        run: npm ci --no-audit --no-fund
+
+      - name: Check server JavaScript syntax
+        working-directory: server
+        run: |
+          node --check server.js
+          node --check scripts/set-staff-claim.cjs
+          node --check scripts/remove-staff-claim.cjs
+
+  refresh-lockfiles:
+    name: Commit reconciled npm lockfiles
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [mobile, server]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Check out main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Refresh mobile lockfile
+        working-directory: mobile
+        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+
+      - name: Refresh server lockfile
+        working-directory: server
+        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+
+      - name: Commit lockfile updates when needed
+        run: |
+          if ! git diff --quiet -- mobile/package-lock.json server/package-lock.json; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add mobile/package-lock.json server/package-lock.json
+            git commit -m "chore: synchronize npm lockfiles"
+            git push origin HEAD:main
+          else
+            echo "npm lockfiles already match package manifests."
+          fi
