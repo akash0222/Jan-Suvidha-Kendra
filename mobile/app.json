@@ -1,0 +1,18 @@
+{
+  "expo": {
+    "name": "Jan Suvidha Kendra",
+    "slug": "jan-suvidha-kendra",
+    "version": "1.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "android": {
+      "package": "com.jansuvidha.kendra"
+    },
+    "ios": {
+      "bundleIdentifier": "com.jansuvidha.kendra"
+    },
+    "plugins": [
+      "expo-status-bar"
+    ]
+  }
+}

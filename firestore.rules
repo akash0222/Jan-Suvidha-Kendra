@@ -1,0 +1,38 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /citizenQueries/{queryId} {
+      // Citizens can submit a query without creating an account.
+      // They cannot read, edit or delete query records from the client.
+      allow create: if
+        request.resource.data.keys().hasAll([
+          'name', 'phone', 'email', 'serviceId', 'serviceTitle',
+          'message', 'status', 'createdAt'
+        ]) &&
+        request.resource.data.keys().hasOnly([
+          'name', 'phone', 'email', 'serviceId', 'serviceTitle',
+          'message', 'status', 'createdAt'
+        ]) &&
+        request.resource.data.name is string &&
+        request.resource.data.name.size() >= 2 &&
+        request.resource.data.name.size() <= 80 &&
+        request.resource.data.phone is string &&
+        request.resource.data.phone.size() >= 8 &&
+        request.resource.data.phone.size() <= 18 &&
+        request.resource.data.email is string &&
+        request.resource.data.email.size() <= 120 &&
+        request.resource.data.serviceId in [
+          'income', 'caste', 'residence', 'birth', 'pension',
+          'ration', 'scholarship', 'bill', 'pan'
+        ] &&
+        request.resource.data.serviceTitle is string &&
+        request.resource.data.message is string &&
+        request.resource.data.message.size() >= 10 &&
+        request.resource.data.message.size() <= 1000 &&
+        request.resource.data.status == 'Received' &&
+        request.resource.data.createdAt == request.time;
+
+      allow read, update, delete: if false;
+    }
+  }
+}
