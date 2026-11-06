@@ -407,7 +407,7 @@ export default function App() {
   return <LanguageContext.Provider value={language}><SafeAreaView style={S.safe}>
     <StatusBar barStyle="dark-content" backgroundColor={C.bg}/>
     {Header()}
-    <View style={S.content}>{staffPortalOpen ? <StaffPortal onExit={() => setStaffPortalOpen(false)}/> : selected ? Details() : tab === "services" ? Home() : tab === "raise" ? QueryForm() : tab === "success" && successRecord ? Success() : Queries()}</View>
+    <View style={S.content}>{staffPortalOpen ? <StaffPortal language={language} onExit={() => setStaffPortalOpen(false)}/> : selected ? Details() : tab === "services" ? Home() : tab === "raise" ? QueryForm() : tab === "success" && successRecord ? Success() : Queries()}</View>
     {tab !== "success" && !staffPortalOpen ? (
     <View style={S.bottomNav}>
       <TouchableOpacity onPress={() => goTab("services")} style={S.navItem}><View style={[S.navIcon,(tab === "services" || selected) && S.navIconActive]}><Ionicons name="grid-outline" size={20} color={(tab === "services" || selected) ? C.forest : "#87938B"}/></View><Text style={[S.navLabel,(tab === "services" || selected) && S.navLabelActive]}>Services</Text></TouchableOpacity>
