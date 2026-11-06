@@ -97,7 +97,7 @@ jobs:
         working-directory: mobile
         run: |
           npm audit --omit=dev --json > mobile-audit.json || true
-          node -e "const r=require('./mobile-audit.json'); console.log(JSON.stringify(r.metadata?.vulnerabilities || {}, null, 2)); for (const [name,v] of Object.entries(r.vulnerabilities || {})) console.log(name + ': ' + v.severity + ' | direct=' + v.isDirect + ' | fix=' + JSON.stringify(v.fixAvailable));"
+          node -e "const r=require('./mobile-audit.json'); console.log(JSON.stringify(r.metadata?.vulnerabilities || {}, null, 2)); for (const [name,v] of Object.entries(r.vulnerabilities || {})) console.log(JSON.stringify({package:name,severity:v.severity,direct:v.isDirect,range:v.range,fixAvailable:v.fixAvailable,advisories:(v.via||[]).filter(x=>typeof x==='object').map(x=>({title:x.title,url:x.url,range:x.range,severity:x.severity,source:x.source}))}));"
 
       - name: Install server dependencies
         working-directory: server
@@ -107,7 +107,7 @@ jobs:
         working-directory: server
         run: |
           npm audit --omit=dev --json > server-audit.json || true
-          node -e "const r=require('./server-audit.json'); console.log(JSON.stringify(r.metadata?.vulnerabilities || {}, null, 2)); for (const [name,v] of Object.entries(r.vulnerabilities || {})) console.log(name + ': ' + v.severity + ' | direct=' + v.isDirect + ' | fix=' + JSON.stringify(v.fixAvailable));"
+          node -e "const r=require('./server-audit.json'); console.log(JSON.stringify(r.metadata?.vulnerabilities || {}, null, 2)); for (const [name,v] of Object.entries(r.vulnerabilities || {})) console.log(JSON.stringify({package:name,severity:v.severity,direct:v.isDirect,range:v.range,fixAvailable:v.fixAvailable,advisories:(v.via||[]).filter(x=>typeof x==='object').map(x=>({title:x.title,url:x.url,range:x.range,severity:x.severity,source:x.source}))}));"
 
   refresh-lockfiles:
     name: Commit reconciled npm lockfiles
