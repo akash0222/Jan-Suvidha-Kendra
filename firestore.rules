@@ -2,8 +2,11 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     match /citizenQueries/{queryId} {
-      // Citizens can submit a query without creating an account.
-      // They cannot read, edit or delete query records from the client.
+      function isStaff() {
+        return request.auth != null && request.auth.token.staff == true;
+      }
+
+      // Citizens can submit queries without signing in.
       allow create: if
         request.resource.data.keys().hasAll([
           'name', 'phone', 'email', 'serviceId', 'serviceTitle',
@@ -32,7 +35,21 @@ service cloud.firestore {
         request.resource.data.status == 'Received' &&
         request.resource.data.createdAt == request.time;
 
-      allow read, update, delete: if false;
+      // Reads are available only to users with a server-assigned staff claim.
+      allow get, list: if isStaff();
+
+      // Staff may update status/audit fields only, never original citizen details.
+      allow update: if isStaff() &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'status', 'updatedAt', 'updatedBy'
+        ]) &&
+        request.resource.data.status in [
+          'Received', 'In Review', 'Resolved', 'Rejected'
+        ] &&
+        request.resource.data.updatedAt == request.time &&
+        request.resource.data.updatedBy == request.auth.token.email;
+
+      allow delete: if false;
     }
   }
 }
