@@ -1,4 +1,4 @@
-import React,{useCallback,useEffect,useMemo,useState} from "react";
+import React,{useCallback,useEffect,useMemo,useRef,useState} from "react";
 import {ActivityIndicator,ScrollView,StyleSheet,Text,TextInput,TouchableOpacity,View} from "react-native";
 import {Ionicons} from "@expo/vector-icons";
 import {getIdTokenResult,onAuthStateChanged,signInWithEmailAndPassword,signOut} from "firebase/auth";
@@ -10,11 +10,12 @@ const C={green:"#123D32",mint:"#EAF3EC",bg:"#F5F7F5",white:"#FFFFFF",ink:"#172B2
 const refFor=id=>"JSK-"+String(id).slice(-8).toUpperCase();
 export default function StaffPortal({onExit}){
  const [user,setUser]=useState(null),[checking,setChecking]=useState(true),[email,setEmail]=useState(""),[password,setPassword]=useState(""),[busy,setBusy]=useState(false),[error,setError]=useState(""),[records,setRecords]=useState([]),[loading,setLoading]=useState(false),[search,setSearch]=useState(""),[filter,setFilter]=useState("All"),[open,setOpen]=useState(""),[pendingUpdate,setPendingUpdate]=useState(null);
+ const pendingUpdateRef=useRef(false);
  const load=useCallback(async()=>{setLoading(true);setError("");try{const snap=await getDocs(query(collection(db,"citizenQueries"),orderBy("createdAt","desc"),limit(100)));setRecords(snap.docs.map(d=>({id:d.id,...d.data()})));}catch(e){console.warn(e?.code||e);setError("Unable to load queries. Check Firestore rules and staff role.");}finally{setLoading(false);}},[]);
  const verify=useCallback(async(u)=>{if(!u){setUser(null);setChecking(false);return;}setChecking(true);try{const token=await getIdTokenResult(u,true);if(token.claims.staff===true){setUser(u);await load();}else{await signOut(auth);setUser(null);setError("This account is not authorised for staff access.");}}catch(e){await signOut(auth).catch(()=>{});setUser(null);setError("Staff access could not be verified. Contact the project administrator.");}finally{setChecking(false);}},[load]);
  useEffect(()=>{const off=onAuthStateChanged(auth,verify);return off;},[verify]);
  const login=async()=>{if(!email.trim()||!password){setError("Enter staff email and password.");return;}setBusy(true);setError("");try{await signInWithEmailAndPassword(auth,email.trim(),password);}catch(e){setError("Sign-in failed. Check your email and password.");}finally{setBusy(false);}};
- const update=async(item,status)=>{if(!user||pendingUpdate)return;setPendingUpdate({id:item.id,status});setError("");try{await updateDoc(doc(db,"citizenQueries",item.id),{status,updatedAt:serverTimestamp(),updatedBy:user.email||""});setRecords(old=>old.map(x=>x.id===item.id?{...x,status}:x));setOpen("");}catch(e){console.warn(e?.code||e);setError("Status update failed. Check the latest Firestore rules.");}finally{setPendingUpdate(null);}};
+ const update=async(item,status)=>{if(!user||pendingUpdateRef.current)return;pendingUpdateRef.current=true;setPendingUpdate({id:item.id,status});setError("");try{await updateDoc(doc(db,"citizenQueries",item.id),{status,updatedAt:serverTimestamp(),updatedBy:user.email||""});setRecords(old=>old.map(x=>x.id===item.id?{...x,status}:x));setOpen("");}catch(e){console.warn(e?.code||e);setError("Status update failed. Check the latest Firestore rules.");}finally{pendingUpdateRef.current=false;setPendingUpdate(null);}};
  const shown=useMemo(()=>records.filter(x=>(filter==="All"||(x.status||"Received")===filter)&&(!search.trim()||[x.name,x.phone,x.email,x.serviceTitle,x.message,refFor(x.id)].join(" ").toLowerCase().includes(search.trim().toLowerCase()))),[records,filter,search]);
  const count=status=>records.filter(x=>(x.status||"Received")===status).length;
  if(checking)return <View style={S.center}><ActivityIndicator color={C.green}/><Text style={S.muted}>Verifying staff access…</Text></View>;
