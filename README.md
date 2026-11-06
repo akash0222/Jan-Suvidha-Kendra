@@ -15,7 +15,7 @@ Authorised staff can:
 - Sign in using an approved email/password account.
 - Review the latest 100 citizen queries.
 - Search by reference, name, phone, service or message.
-- Filter by Received, In Review and Resolved.
+- Filter by All, Received, In Review, Resolved and Rejected.
 - Update status to Received, In Review, Resolved or Rejected.
 
 Staff cannot edit original citizen-submitted details or delete records. Firestore Security Rules enforce these restrictions.
@@ -99,3 +99,6 @@ Expo SDK requires Firebase JS SDK 12 or later; `mobile/package.json` is aligned 
 - Keep service-account key access restricted and rotate/revoke keys if exposed.
 - Test Firestore rules in the Firebase Emulator or Rules Playground before production use.
 - Test the staff workflow on physical devices and verify that unapproved accounts cannot read citizen records.
+
+## Automated checks
+GitHub Actions runs the mobile Android export and server syntax checks for pushes and pull requests. The workflow refreshes the mobile and server npm lockfiles from their package manifests, verifies clean installs with `npm ci`, and commits lockfile changes on pushes to `main` when needed.
