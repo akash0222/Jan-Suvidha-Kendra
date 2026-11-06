@@ -1,1 +1,18 @@
-{"name":"jsk-query-api","version":"1.0.0","private":true,"scripts":{"start":"node server.js","dev":"node --watch server.js"},"dependencies":{"express":"^4.21.2"}}
+{
+  "name": "jsk-query-api",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "set-staff-claim": "node scripts/set-staff-claim.cjs",
+    "remove-staff-claim": "node scripts/remove-staff-claim.cjs"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "firebase-admin": "^14.5.0"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
