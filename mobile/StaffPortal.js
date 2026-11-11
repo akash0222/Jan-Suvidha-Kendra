@@ -39,7 +39,7 @@ const STAFF_HI={
  "Utility Bill Payment Assistance":"उपयोगिता बिल भुगतान सहायता",
  "PAN Card Assistance":"PAN कार्ड सहायता",
  "Citizen service":"नागरिक सेवा",
- "Update status":"स्थिति अपडेट करें"
+ "Update status":"स्थिति अपडेट करें",
  "Unable to load queries. Check Firestore rules and staff role.":"प्रश्न लोड नहीं हो सके। Firestore नियम और कर्मचारी भूमिका जाँचें।",
  "This account is not authorised for staff access.":"इस खाते को कर्मचारी प्रवेश की अनुमति नहीं है।",
  "Staff access could not be verified. Contact the project administrator.":"कर्मचारी अनुमति सत्यापित नहीं हो सकी। प्रोजेक्ट प्रशासक से संपर्क करें।",
