@@ -42,7 +42,7 @@ const STAFF_HI={
  "Loaded":"लोड किए गए",
  "Showing the latest 100 queries. Load older records to see previous requests.":"नवीनतम 100 प्रश्न दिखाए जा रहे हैं। पुराने अनुरोध देखने के लिए आगे लोड करें।",
  "Load older queries":"पुराने प्रश्न लोड करें",
- "All loaded queries are shown.":"सभी लोड किए गए प्रश्न दिखाए जा चुके हैं।"
+ "All loaded queries are shown.":"सभी लोड किए गए प्रश्न दिखाए जा चुके हैं।",
  "Update status":"स्थिति अपडेट करें",
  "Unable to load queries. Check Firestore rules and staff role.":"प्रश्न लोड नहीं हो सके। Firestore नियम और कर्मचारी भूमिका जाँचें।",
  "This account is not authorised for staff access.":"इस खाते को कर्मचारी प्रवेश की अनुमति नहीं है।",
