@@ -1,14 +1,26 @@
 # Aman Multi Works – Mobile App
 
-**Aman Multi Works** is a multi-service assistance app for browsing citizen services, preparing documents and sending queries to the support team.
+**Aman Multi Works** is a multi-service consultancy and citizen-assistance app. Its catalogue brings together business registrations, tax and compliance support, digital and e-governance services, business advisory, insurance and fleet support, and public-facing citizen services. The app also includes the HUNERTECH CONSULTANCY profile and contact shortcuts supplied for the business.
 
 ## Citizen app
-- Browse nine citizen services, search and filter by category.
+- Browse 37 services across business registration, tax and compliance, digital and e-governance, business advisory, insurance and fleet support, certificates, government schemes, education, utilities and identity services.
 - Use English or Hindi; the language preference is stored on the device.
-- View service details and an interactive document-preparation checklist.
+- View service details and a preparation reminder. Business-service document requirements are confirmed after review; the app does not present an unofficial list as a statutory checklist.
 - Submit queries directly to Cloud Firestore without a citizen login.
 - Receive a Firestore-based reference number and a confirmation screen.
 - My Queries is a device-local history, not a live server-side status tracker.
+
+## Business profile and contact
+
+The services screen displays the profile supplied in the HUNERTECH CONSULTANCY document:
+
+- **Hindi line:** विश्वास और सेवा का संगम
+- **Slogan:** START FROM ZERO AND MAKE NINES!
+- **Office:** Ram Mahesh ji market, Tirwa Kannauj Road, Faguha, Kannauj - 209732
+- **Phone / WhatsApp:** 9120549544
+- **Email:** sggs2025byaman@gmail.com
+
+Phone, WhatsApp and email shortcuts open the corresponding device app. Confirm that these details remain current before publishing a public build.
 
 ## Staff query inbox
 Open **My Queries → Staff access**. Only Firebase Authentication users carrying the server-assigned custom claim `staff: true` can read citizen records.
@@ -92,7 +104,7 @@ The mobile app uses Firebase JS SDK 13 for Firestore and persistent staff authen
 - Firestore collection remains `citizenQueries`; the citizen-submitted fields are unchanged.
 - My Queries is stored locally on the device. Clearing app data or changing phones may remove that history.
 - Staff can view citizen contact details. Grant access only to trusted personnel who need it and handle records confidentially.
-- Service document lists, eligibility, fees and timelines are indicative and must be confirmed with the relevant authority.
+- Service document lists, eligibility, fees and timelines are indicative and must be confirmed with the relevant authority or a qualified professional. Tax, company, legal and compliance filings may require a suitably qualified or authorised professional.
 - Never ask citizens for passwords, OTPs or bank PINs.
 
 ## Production checklist
