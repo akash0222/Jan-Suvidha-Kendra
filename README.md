@@ -77,7 +77,7 @@ The Firebase Admin SDK is installed only in the trusted `server/` environment. V
 Copy the root `firestore.rules` file into Firebase Console → Firestore Database → Rules and publish it.
 
 The rules:
-- Allow anonymous citizens to create valid query records.
+- Allow anonymous citizens to create valid query records for all 37 catalogue service IDs.
 - Allow reads only to authenticated users with the server-assigned `staff: true` claim.
 - Allow staff to update only `status`, `updatedAt` and `updatedBy`.
 - Deny all client deletes and public reads.
