@@ -15,6 +15,7 @@
     },
     "plugins": [
       "expo-status-bar"
-    ]
+    ],
+    "description": "Aman Multi Works – multi-service support and citizen assistance."
   }
 }
