@@ -241,7 +241,7 @@ export default function App() {
     <View style={S.hero}>
       <View style={S.heroGlow}/><View style={S.heroRing}/>
       <View style={S.heroEyebrow}><View style={S.liveDot}/><Text style={S.heroEyebrowText}>YOUR MULTI-SERVICE PARTNER</Text></View>
-      <Text style={S.heroTitle}>Simple help.{'\n'}Clear guidance.</Text>
+      <Text style={S.heroTitle}>Business support.{'\\n'}Citizen services.</Text>
       <Text style={S.heroDesc}>Explore business registrations, tax and compliance, digital services and everyday citizen assistance.</Text>
       <View style={S.heroStats}>
         <View><Text style={S.heroValue}>{String(SERVICES.length).padStart(2,"0")}</Text><Text style={S.heroLabel}>SERVICES</Text></View>
