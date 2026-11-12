@@ -2,16 +2,16 @@
   "expo": {
     "name": "Aman Multi Works",
     "slug": "jan-suvidha-kendra",
-    "version": "1.2.0",
+    "version": "1.3.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "android": {
       "package": "com.jansuvidha.kendra",
-      "versionCode": 2
+      "versionCode": 3
     },
     "ios": {
       "bundleIdentifier": "com.jansuvidha.kendra",
-      "buildNumber": "2"
+      "buildNumber": "3"
     },
     "plugins": [
       "expo-status-bar"
