@@ -1,4 +1,6 @@
-# Jan Suvidha Kendra – Mobile App
+# Aman Multi Works – Mobile App
+
+**Aman Multi Works** is a multi-service assistance app for browsing citizen services, preparing documents and sending queries to the support team.
 
 ## Citizen app
 - Browse nine citizen services, search and filter by category.
