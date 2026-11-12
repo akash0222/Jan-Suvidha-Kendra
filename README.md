@@ -77,7 +77,7 @@ npx expo-doctor@latest
 npx expo start -c
 ```
 
-Expo SDK requires Firebase JS SDK 12 or later; `mobile/package.json` is aligned to Firebase 12. Run `npm install` so the local package lock is refreshed for the new version.
+The mobile app uses Firebase JS SDK 13 for Firestore and persistent staff authentication. Keep `mobile/package.json` and `mobile/package-lock.json` synchronized when dependencies change.
 
 ## Project structure
 - `mobile/` – Expo React Native application.
